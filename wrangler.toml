@@ -1,0 +1,23 @@
+# Cloudflare Pages + Workers configuration
+# Deploy via: npx wrangler pages deploy . --project-name=ling-seminar-cms
+#
+# SETUP STEPS:
+# 1. Create a KV namespace in Cloudflare dashboard → Workers & Pages → KV
+#    Name it anything (e.g. "ling-seminar-kv") and copy the ID below.
+# 2. Replace YOUR_KV_NAMESPACE_ID with the actual ID.
+# 3. Set environment variables in Cloudflare Pages dashboard:
+#    Settings → Environment variables → Add:
+#      ADMIN_USER = your_chosen_username
+#      ADMIN_PASS = your_chosen_password
+# 4. In Pages project settings → Functions → KV namespace bindings → Add:
+#    Variable name: CMS_KV  →  KV namespace: (select the one you created)
+# 5. Deploy the site, then visit /admin/ and log in.
+# 6. Go to Tools tab in the admin and click "Run Seed" to import all events.
+
+name = "ling-seminar-wsu"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "CMS_KV"
+id = "cd1b9848ff5a4ca39f1b05e00a999ea8"

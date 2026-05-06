@@ -1,0 +1,300 @@
+/* Global */
+
+body {
+    padding-top: 80px;
+    scroll-behavior: smooth !important;
+  }
+  
+  .bg-rcs {
+     background-color: #445AAA;
+  }
+  
+  a.navbar-brand img{
+      width: 7rem  !important;
+  }
+
+  .navbar {
+    transition: top 0.3s ease-in-out;
+    top: -200px; /* Adjust this value based on your navbar height */
+  }
+  
+  
+  /* Hero Image */
+  
+  .parallax {
+    padding: 270px 0;
+    background-position: 50% 83%;
+    background-size: cover;
+  }
+  
+  .parallax-container {
+    min-width: 100%;
+    margin: 0 auto;
+  }
+  
+  .parallax h2 {
+    color:#663399;
+    font-size: 48px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .parallax.blak {
+    background-image: url("img/black_douglas.jpg");
+    background-position: 50% 0;
+    background-color: rgba(156, 101, 101, 0.3);
+    background-blend-mode:saturation;
+  }
+  
+  .parallax.workshop{
+    background-image: url("../workshops/img/workshop.jpg");
+    background-position: 50% 70%;
+  }
+  
+  .parallax.film{
+    background-image: url("../enrico_film_stils/enrico_images/image2.jpg");
+    background-position: 50% 70%;
+  }
+  
+  /* Swiper */
+  
+  .swiper {
+    user-select: none;
+    box-sizing: border-box;
+    overflow: hidden;
+    width: 100%;
+    height: 500px;
+    padding-top: 0px;
+    padding-bottom: 48px;
+  }
+  
+  .swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 75%;
+    height: 100%;
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    background-color: rgba(51, 51, 51, 1);
+    border-radius: 12px;
+    border: 2px solid #663399;
+  }
+  
+  .swiper-slide-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    padding: 48px 48px;
+    align-items: flex-start;
+  }
+  
+  .swiper-slide-title {
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+  }
+  
+  .swiper-slide-text {
+    max-width: 640px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #ffffff;
+  }
+  
+  .swiper-slide-title + .swiper-slide-text {
+    margin-top: 8px;
+  }
+  
+  .swiper-slide-image {
+    position: absolute;
+    object-fit: cover;
+    left: 0%;
+    width: 100%;
+    z-index: 0;
+  }
+  
+  :root {
+    --swiper-navigation-color: #663399;
+    --swiper-pagination-color:#663399;
+    --swiper-pagination-bullet-inactive-color:#663399;
+  }
+  
+  /* Lists */
+  
+  .modal-dialog {
+    max-width: 80%;
+  }
+  
+  .preview {
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  
+  .lt-time {
+    background-color: #663399;
+    padding: 0 5px;
+    border-radius: 5px;
+    text-wrap: nowrap;
+    color: white;
+    font-size: medium;
+    margin-bottom: 5px;
+    display: inline-block;
+  }
+  
+  
+  /* Cards */
+  
+  .card {
+    box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05);
+    color: black;
+  }
+  
+  a > .card {
+    transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
+    cursor: pointer;
+  }
+  
+  a > .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+  }
+  
+  /* Footer */
+  
+  footer img {
+    width: min(60rem, 100%);
+    margin: 0 auto;
+  }
+  
+  /* Footer Placement */
+  /* From: https://www.freecodecamp.org/news/how-to-keep-your-footer-where-it-belongs-59c6aa05c59c/ */
+  
+  footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+  }
+  
+  body {
+    position: relative;
+    min-height: 100vh;
+  }
+  
+  main {
+    padding-bottom: 290px;
+  }
+  
+  /* Home Page */
+  /* 
+  .logo-bg {
+    /* background-color: #663399;
+    justify-content: center;
+    display: flex;
+    box-shadow: 8px 8px 10px #444;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    padding: 100px 0px; 
+  }
+  */
+  
+  /* 
+  .logo-bg img {
+    /* width: 60%; 
+  }
+  */
+  .btn-outline-dark {
+    border-color: #663399;
+    color: #663399;
+  }
+  
+  .btn-outline-dark:hover {
+    background-color: #2754be;
+    color: white;
+  }
+
+  @media (max-width: 768px) { 
+    body {
+      margin-bottom: 100px; 
+    }
+  
+    
+
+    #img-about{
+      width: 10rem !important;
+      margin-bottom: 1.2rem;
+    }
+
+    h4.title{
+      font-size: 1em!important;
+    
+    }
+
+  }
+
+  h4.title{
+    font-size: 2.1rem !important;
+    font-weight: bold !important;
+    white-space: wrap !important;
+  }
+  
+
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: left;
+    color: white;
+    padding: 20px; /* Provides padding around the content */
+}
+
+.overlay-content {
+    width: 50%; /* Limits the width of the content area */
+   
+}
+
+.overlay-text {
+    margin-bottom: 20px; /* Space between the text and the button */
+    font-size: 16px; /* Adjust font size as needed */
+    line-height: 2.8; 
+}
+
+.overlay-content button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #007BFF; /* Bootstrap primary color */
+    color: white;
+    border: none;
+    border-radius: 5px; /* Rounded corners for the button */
+}
+
+/* Mobile Overlay - Jack Coggins 2024-04-18 */
+@media (max-width: 767.98px) {
+  .overlay-content {
+    width: 100%;
+  }
+
+  .overlay-text {
+    line-height: initial;
+  }
+
+  .overlay-text > span.display-4 {
+    line-height: 1.5em;
+  }
+}

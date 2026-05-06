@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Linguistics Seminar CMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root { --brand: #445AAA; --brand-dark: #3449a0; }
+    body { background: #f0f2f5; font-size: 0.95rem; }
+    .sidebar {
+      width: 240px; min-height: 100vh; background: var(--brand);
+      position: fixed; top: 0; left: 0; z-index: 100;
+      display: flex; flex-direction: column;
+    }
+    .sidebar-brand {
+      padding: 1.5rem 1.25rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    .sidebar-brand h6 { color: white; font-weight: 700; margin: 0; font-size: 1rem; }
+    .sidebar-brand small { color: rgba(255,255,255,0.7); font-size: 0.75rem; }
+    .sidebar-nav { padding: 1rem 0; flex: 1; }
+    .sidebar-nav .nav-link {
+      color: rgba(255,255,255,0.8); padding: 0.6rem 1.25rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      border-radius: 0; transition: all 0.2s;
+    }
+    .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active {
+      color: white; background: rgba(255,255,255,0.15);
+    }
+    .sidebar-nav .nav-link i { font-size: 1.1rem; width: 1.2rem; }
+    .sidebar-bottom { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.15); }
+    .main-content { margin-left: 240px; padding: 2rem; }
+    .topbar {
+      background: white; border-radius: 12px; padding: 1rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .topbar h5 { margin: 0; font-weight: 700; color: #1a1a2e; }
+    .stat-card {
+      background: white; border-radius: 12px; padding: 1.25rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: none;
+    }
+    .stat-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .table-card {
+      background: white; border-radius: 12px; padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .badge-upcoming { background: #d1fae5; color: #065f46; }
+    .badge-past { background: #f3f4f6; color: #6b7280; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; }
+    .modal-header { background: var(--brand); color: white; }
+    .modal-header .btn-close { filter: invert(1); }
+    textarea { resize: vertical; }
+    @media (max-width: 768px) {
+      .sidebar { width: 100%; min-height: auto; position: static; }
+      .main-content { margin-left: 0; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <i class="bi bi-journal-text text-white fs-4 d-block mb-1"></i>
+    <h6>Seminar CMS</h6>
+    <small>Languages &amp; Linguistics</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-link active" href="#" data-tab="events"><i class="bi bi-calendar3"></i> Events</a>
+    <a class="nav-link" href="#" data-tab="subscribers"><i class="bi bi-envelope"></i> Subscribers</a>
+    <a class="nav-link" href="#" data-tab="tools"><i class="bi bi-tools"></i> Tools</a>
+    <a class="nav-link" href="#" data-tab="account"><i class="bi bi-person-gear"></i> Account</a>
+    <a class="nav-link" href="../" target="_blank"><i class="bi bi-box-arrow-up-right"></i> View Site</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="btn btn-sm btn-outline-light w-100" id="logoutBtn">
+      <i class="bi bi-box-arrow-left me-1"></i> Logout
+    </button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main-content">
+  <!-- Events Tab -->
+  <div class="tab-pane active" id="tab-events">
+    <div class="topbar">
+      <h5><i class="bi bi-calendar3 me-2"></i>Events</h5>
+      <button class="btn btn-primary btn-sm fw-semibold" id="addEventBtn">
+        <i class="bi bi-plus-lg me-1"></i>Add Event
+      </button>
+    </div>
+    <!-- Stats row -->
+    <div class="row g-3 mb-4" id="statsRow">
+      <div class="col-md-4">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="background:#ede9fe"><i class="bi bi-calendar-check" style="color:#7c3aed"></i></div>
+          <div><div class="fw-bold fs-4" id="statTotal">–</div><div class="text-muted small">Total Events</div></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="background:#d1fae5"><i class="bi bi-arrow-right-circle" style="color:#059669"></i></div>
+          <div><div class="fw-bold fs-4" id="statUpcoming">–</div><div class="text-muted small">Upcoming</div></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card d-flex align-items-center gap-3">
+          <div class="stat-icon" style="background:#fee2e2"><i class="bi bi-clock-history" style="color:#dc2626"></i></div>
+          <div><div class="fw-bold fs-4" id="statPast">–</div><div class="text-muted small">Past</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Filter -->
+    <div class="table-card mb-3">
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        <input type="text" class="form-control form-control-sm" style="max-width:220px" id="eventsSearch" placeholder="Search speaker or title…">
+        <select class="form-select form-select-sm" style="max-width:140px" id="eventsYearFilter">
+          <option value="">All years</option>
+        </select>
+        <select class="form-select form-select-sm" style="max-width:160px" id="eventsStatusFilter">
+          <option value="">All status</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="past">Past</option>
+        </select>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Speaker</th>
+              <th>Institution</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th style="width:100px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTableBody">
+            <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm"></span> Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscribers Tab -->
+  <div class="tab-pane" id="tab-subscribers">
+    <div class="topbar">
+      <h5><i class="bi bi-envelope me-2"></i>Newsletter Subscribers</h5>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" id="exportSubsBtn"><i class="bi bi-download me-1"></i>Export CSV</button>
+        <button class="btn btn-primary btn-sm" id="refreshSubsBtn"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div id="subsCount" class="mb-3 text-muted small"></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Subscribed</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subsTableBody">
+            <tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm"></span> Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Tab -->
+  <div class="tab-pane" id="tab-account">
+    <div class="topbar"><h5><i class="bi bi-person-gear me-2"></i>Account</h5></div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="table-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-key me-2"></i>Change Login Credentials</h6>
+          <p class="text-muted small">Update the username and password used to access this admin panel.</p>
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#credentialsModal">
+            <i class="bi bi-pencil me-1"></i>Change Credentials
+          </button>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="table-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Session Info</h6>
+          <p class="text-muted small">Your login session is valid for 24 hours. After that you will be automatically logged out.</p>
+          <button class="btn btn-outline-danger btn-sm" id="logoutBtn2">
+            <i class="bi bi-box-arrow-left me-1"></i>Log Out Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tools Tab -->
+  <div class="tab-pane" id="tab-tools">
+    <div class="topbar"><h5><i class="bi bi-tools me-2"></i>Tools</h5></div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="table-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-database-up me-2"></i>Seed Initial Data</h6>
+          <p class="text-muted small">Populate the database with all original seminar events. Only run this once on a fresh deployment.</p>
+          <button class="btn btn-warning btn-sm fw-semibold" id="seedBtn">
+            <i class="bi bi-play-fill me-1"></i>Run Seed
+          </button>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="table-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-rss me-2"></i>RSS Feed</h6>
+          <p class="text-muted small">Share this URL so attendees can subscribe to upcoming events in their RSS reader.</p>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control" id="rssUrl" readonly>
+            <button class="btn btn-outline-secondary" id="copyRssBtn"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="table-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-envelope-paper me-2"></i>Send Newsletter</h6>
+          <p class="text-muted small mb-3">Compose an email and send it to all <strong id="subscriberCountBadge">—</strong> subscribers via Resend. Each email includes a personal unsubscribe link.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Subject</label>
+            <input type="text" class="form-control form-control-sm" id="newsletterSubject" placeholder="e.g. Upcoming Seminar — Dr. Jane Smith, 15 May">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Message</label>
+            <textarea class="form-control form-control-sm" id="newsletterBody" rows="6" placeholder="Write your message here. Blank lines create new paragraphs."></textarea>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-primary btn-sm" id="sendNewsletterBtn"><i class="bi bi-send me-1"></i>Send to All Subscribers</button>
+            <button class="btn btn-outline-secondary btn-sm" id="copyEmailsBtn"><i class="bi bi-clipboard me-1"></i>Copy All Emails</button>
+            <span id="emailsCopied" class="text-success small d-none"><i class="bi bi-check-circle me-1"></i>Copied!</span>
+          </div>
+          <div id="newsletterResult" class="mt-3 d-none"></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="table-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-trash3 me-2"></i>Danger Zone</h6>
+          <p class="text-muted small">Permanently delete ALL events from the database. This cannot be undone.</p>
+          <button class="btn btn-danger btn-sm" id="clearEventsBtn"><i class="bi bi-trash3 me-1"></i>Clear All Events</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Event Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Add Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="eventForm">
+          <input type="hidden" id="eventId">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="evDate" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Start Time</label>
+              <input type="time" class="form-control" id="evTime" value="13:00">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">End Time</label>
+              <input type="time" class="form-control" id="evEndTime" value="14:00">
+            </div>
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">Speaker(s) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="evSpeaker" placeholder="e.g. Dr Jane Smith" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Institution</label>
+              <input type="text" class="form-control" id="evInstitution" placeholder="University name">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Talk Title</label>
+              <input type="text" class="form-control" id="evTitle" placeholder="Leave blank if TBA">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Abstract</label>
+              <textarea class="form-control" id="evAbstract" rows="5" placeholder="Talk abstract…"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Venue</label>
+              <input type="text" class="form-control" id="evVenue" placeholder="e.g. Parramatta South Campus EB.3.36 or Via Zoom">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Zoom Link</label>
+              <input type="url" class="form-control" id="evZoomLink" placeholder="https://uws.zoom.us/j/…">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Abstract PDF path</label>
+              <input type="text" class="form-control" id="evAbstractPdf" placeholder="Abstracts/filename.pdf">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary fw-semibold" id="saveEventBtn">
+          <span id="saveSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>Save Event
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Change Credentials Modal -->
+<div class="modal fade" id="credentialsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Change Login Credentials</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="credEnvWarning" class="alert alert-warning small d-none">
+          <i class="bi bi-info-circle me-1"></i>
+          Your credentials are managed via Cloudflare environment variables. Update <code>ADMIN_USER</code> and <code>ADMIN_PASS</code> in your Cloudflare Pages dashboard instead.
+        </div>
+        <form id="credForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">New Username</label>
+            <input type="text" class="form-control" id="newUsername" minlength="3" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">New Password</label>
+            <input type="password" class="form-control" id="newPassword" minlength="8" placeholder="At least 8 characters" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Confirm New Password</label>
+            <input type="password" class="form-control" id="newPasswordConfirm" required>
+          </div>
+          <div id="credError" class="text-danger small d-none"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary fw-semibold" id="saveCredBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h6 class="modal-title">Delete Event</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Are you sure you want to delete <strong id="deleteEventName"></strong>? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger btn-sm fw-semibold" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const TOKEN = localStorage.getItem('cms_token');
+if (!TOKEN) window.location.href = 'index.html';
+
+const api = (path, opts = {}) => fetch(path, {
+  ...opts,
+  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}`, ...(opts.headers || {}) },
+}).then(async r => {
+  if (r.status === 401) { localStorage.removeItem('cms_token'); window.location.href = 'index.html'; }
+  return r;
+});
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast align-items-center text-bg-${type} border-0 show mb-2`;
+  el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// Tab nav
+document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.nav-link[data-tab]').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    link.classList.add('active');
+    document.getElementById('tab-' + link.dataset.tab).classList.add('active');
+    if (link.dataset.tab === 'subscribers' || link.dataset.tab === 'tools') loadSubscribers();
+  });
+});
+
+// ─── Events ────────────────────────────────────────────────
+let allEvents = [];
+
+async function loadEvents() {
+  const res = await fetch('/api/events');
+  allEvents = await res.json();
+  populateYearFilter();
+  renderEvents();
+  updateStats();
+}
+
+function populateYearFilter() {
+  const sel = document.getElementById('eventsYearFilter');
+  const current = sel.value;
+  const years = [...new Set(allEvents.map(e => e.date.substring(0, 4)))].sort((a, b) => b - a);
+  sel.innerHTML = '<option value="">All years</option>' +
+    years.map(y => `<option value="${y}"${y === current ? ' selected' : ''}>${y}</option>`).join('');
+}
+
+function updateStats() {
+  const now = new Date();
+  const upcoming = allEvents.filter(e => new Date(e.date) >= now).length;
+  document.getElementById('statTotal').textContent = allEvents.length;
+  document.getElementById('statUpcoming').textContent = upcoming;
+  document.getElementById('statPast').textContent = allEvents.length - upcoming;
+}
+
+function renderEvents() {
+  const search = document.getElementById('eventsSearch').value.toLowerCase();
+  const year = document.getElementById('eventsYearFilter').value;
+  const status = document.getElementById('eventsStatusFilter').value;
+  const now = new Date();
+
+  let filtered = allEvents.filter(e => {
+    const past = new Date(e.date) < now;
+    if (status === 'upcoming' && past) return false;
+    if (status === 'past' && !past) return false;
+    if (year && !e.date.startsWith(year)) return false;
+    if (search && !e.speaker.toLowerCase().includes(search) && !(e.title || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const tbody = document.getElementById('eventsTableBody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No events found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(e => {
+    const past = new Date(e.date) < now;
+    const badge = past
+      ? '<span class="badge badge-past">Past</span>'
+      : '<span class="badge badge-upcoming">Upcoming</span>';
+    const title = e.title && e.title !== 'TBA' ? e.title.substring(0, 50) + (e.title.length > 50 ? '…' : '') : '<em class="text-muted">TBA</em>';
+    const date = new Date(e.date + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `<tr>
+      <td class="text-nowrap">${date}</td>
+      <td>${escHtml(e.speaker)}</td>
+      <td class="text-muted small">${escHtml(e.institution || '')}</td>
+      <td>${title}</td>
+      <td>${badge}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary py-0 me-1" onclick="openEdit('${e.id}')"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger py-0" onclick="openDelete('${e.id}', '${escHtml(e.speaker).replace(/'/g,"\\'")}')"><i class="bi bi-trash3"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+['eventsSearch','eventsYearFilter','eventsStatusFilter'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderEvents);
+  document.getElementById(id).addEventListener('change', renderEvents);
+});
+
+// Add event
+document.getElementById('addEventBtn').addEventListener('click', () => {
+  document.getElementById('modalTitle').textContent = 'Add Event';
+  document.getElementById('eventForm').reset();
+  document.getElementById('eventId').value = '';
+  document.getElementById('evTime').value = '13:00';
+  document.getElementById('evEndTime').value = '14:00';
+  new bootstrap.Modal(document.getElementById('eventModal')).show();
+});
+
+function openEdit(id) {
+  const e = allEvents.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('modalTitle').textContent = 'Edit Event';
+  document.getElementById('eventId').value = e.id;
+  document.getElementById('evDate').value = e.date || '';
+  document.getElementById('evTime').value = e.time || '13:00';
+  document.getElementById('evEndTime').value = e.endTime || '14:00';
+  document.getElementById('evSpeaker').value = e.speaker || '';
+  document.getElementById('evInstitution').value = e.institution || '';
+  document.getElementById('evTitle').value = e.title && e.title !== 'TBA' ? e.title : '';
+  document.getElementById('evAbstract').value = e.abstract || '';
+  document.getElementById('evVenue').value = e.venue || '';
+  document.getElementById('evZoomLink').value = e.zoomLink || '';
+  document.getElementById('evAbstractPdf').value = e.abstractPdf || '';
+  new bootstrap.Modal(document.getElementById('eventModal')).show();
+}
+
+document.getElementById('saveEventBtn').addEventListener('click', async () => {
+  const form = document.getElementById('eventForm');
+  if (!form.reportValidity()) return;
+
+  const btn = document.getElementById('saveEventBtn');
+  const spinner = document.getElementById('saveSpinner');
+  btn.disabled = true; spinner.classList.remove('d-none');
+
+  const id = document.getElementById('eventId').value;
+  const payload = {
+    id: id || undefined,
+    date: document.getElementById('evDate').value,
+    time: document.getElementById('evTime').value,
+    endTime: document.getElementById('evEndTime').value,
+    speaker: document.getElementById('evSpeaker').value,
+    institution: document.getElementById('evInstitution').value,
+    title: document.getElementById('evTitle').value || 'TBA',
+    abstract: document.getElementById('evAbstract').value,
+    venue: document.getElementById('evVenue').value,
+    zoomLink: document.getElementById('evZoomLink').value,
+    abstractPdf: document.getElementById('evAbstractPdf').value,
+  };
+
+  const method = id ? 'PUT' : 'POST';
+  const res = await api('/api/events', { method, body: JSON.stringify(payload) });
+
+  if (res.ok) {
+    bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+    toast(id ? 'Event updated!' : 'Event added!');
+    await loadEvents();
+  } else {
+    const d = await res.json();
+    toast(d.error || 'Error saving event', 'danger');
+  }
+  btn.disabled = false; spinner.classList.add('d-none');
+});
+
+let pendingDeleteId = null;
+function openDelete(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('deleteEventName').textContent = name;
+  new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  const res = await api('/api/events', { method: 'DELETE', body: JSON.stringify({ id: pendingDeleteId }) });
+  if (res.ok) {
+    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    toast('Event deleted');
+    await loadEvents();
+  } else {
+    toast('Error deleting event', 'danger');
+  }
+  pendingDeleteId = null;
+});
+
+// ─── Subscribers ────────────────────────────────────────────
+let allSubs = [];
+
+async function loadSubscribers() {
+  const res = await api('/api/newsletter');
+  if (!res.ok) return;
+  allSubs = await res.json();
+  renderSubscribers();
+}
+
+function renderSubscribers() {
+  const label = `${allSubs.length} subscriber${allSubs.length !== 1 ? 's' : ''}`;
+  document.getElementById('subsCount').textContent = label;
+  document.getElementById('subscriberCountBadge').textContent = allSubs.length;
+  const tbody = document.getElementById('subsTableBody');
+  if (!allSubs.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No subscribers yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allSubs.map((s, i) => `
+    <tr>
+      <td class="text-muted">${i + 1}</td>
+      <td>${escHtml(s.email)}</td>
+      <td>${escHtml(s.name || '–')}</td>
+      <td class="text-muted small">${new Date(s.subscribedAt).toLocaleDateString('en-AU')}</td>
+      <td><button class="btn btn-sm btn-outline-danger py-0" onclick="removeSub('${escHtml(s.email)}')"><i class="bi bi-trash3"></i></button></td>
+    </tr>`).join('');
+}
+
+async function removeSub(email) {
+  if (!confirm(`Remove ${email}?`)) return;
+  const res = await api(`/api/newsletter?email=${encodeURIComponent(email)}`, { method: 'DELETE' });
+  if (res.ok) { toast('Subscriber removed'); await loadSubscribers(); }
+  else toast('Error', 'danger');
+}
+
+document.getElementById('refreshSubsBtn').addEventListener('click', loadSubscribers);
+
+document.getElementById('exportSubsBtn').addEventListener('click', () => {
+  if (!allSubs.length) return;
+  const csv = 'Email,Name,Subscribed\n' + allSubs.map(s =>
+    `"${s.email}","${s.name || ''}","${new Date(s.subscribedAt).toLocaleDateString('en-AU')}"`
+  ).join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+    download: 'subscribers.csv',
+  });
+  a.click();
+});
+
+// ─── Tools ──────────────────────────────────────────────────
+document.getElementById('rssUrl').value = window.location.origin + '/api/rss';
+
+document.getElementById('copyRssBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('rssUrl').value);
+  toast('RSS URL copied!');
+});
+
+document.getElementById('copyEmailsBtn').addEventListener('click', async () => {
+  if (!allSubs.length) { await loadSubscribers(); }
+  const emails = allSubs.map(s => s.email).join(', ');
+  if (!emails) { toast('No subscribers', 'warning'); return; }
+  navigator.clipboard.writeText(emails);
+  document.getElementById('emailsCopied').classList.remove('d-none');
+  setTimeout(() => document.getElementById('emailsCopied').classList.add('d-none'), 3000);
+});
+
+document.getElementById('sendNewsletterBtn').addEventListener('click', async () => {
+  const subject = document.getElementById('newsletterSubject').value.trim();
+  const message = document.getElementById('newsletterBody').value.trim();
+  const resultEl = document.getElementById('newsletterResult');
+  resultEl.className = 'mt-3';
+
+  if (!subject) { resultEl.innerHTML = '<div class="alert alert-warning py-2 mb-0">Please enter a subject.</div>'; resultEl.classList.remove('d-none'); return; }
+  if (!message) { resultEl.innerHTML = '<div class="alert alert-warning py-2 mb-0">Please enter a message.</div>'; resultEl.classList.remove('d-none'); return; }
+
+  const btn = document.getElementById('sendNewsletterBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending…';
+  resultEl.classList.add('d-none');
+
+  const res = await api('/api/notify', { method: 'POST', body: JSON.stringify({ subject, message }) });
+  const d = await res.json();
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-send me-1"></i>Send to All Subscribers';
+
+  if (res.ok) {
+    resultEl.innerHTML = `<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle me-1"></i>Sent to <strong>${d.sent}</strong> subscriber${d.sent !== 1 ? 's' : ''}${d.failed ? ` (${d.failed} failed)` : ''}.</div>`;
+    document.getElementById('newsletterSubject').value = '';
+    document.getElementById('newsletterBody').value = '';
+  } else {
+    resultEl.innerHTML = `<div class="alert alert-danger py-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>${escHtml(d.error || 'Send failed.')}</div>`;
+  }
+  resultEl.classList.remove('d-none');
+});
+
+document.getElementById('seedBtn').addEventListener('click', async () => {
+  if (!confirm('This will populate the database with all original 2024–2025 seminar data. Continue?')) return;
+  const res = await api('/api/seed', { method: 'POST' });
+  const d = await res.json();
+  if (res.ok) { toast(`Seeded ${d.count} events!`); await loadEvents(); }
+  else toast(d.error || 'Seed failed', 'danger');
+});
+
+document.getElementById('clearEventsBtn').addEventListener('click', async () => {
+  if (!confirm('⚠️ This will DELETE ALL events permanently. Are you absolutely sure?')) return;
+  if (!confirm('Last chance — delete all events?')) return;
+  for (const e of allEvents) {
+    await api('/api/events', { method: 'DELETE', body: JSON.stringify({ id: e.id }) });
+  }
+  toast('All events deleted');
+  await loadEvents();
+});
+
+// ─── Change Credentials ─────────────────────────────────────
+document.getElementById('credentialsModal').addEventListener('show.bs.modal', async () => {
+  const res = await fetch('/api/setup');
+  const data = await res.json();
+  // If env vars are managing credentials, show warning and disable form
+  if (!data.setupRequired && res.ok) {
+    // Check if env vars are in use by attempting a flag from setup endpoint
+  }
+});
+
+document.getElementById('saveCredBtn').addEventListener('click', async () => {
+  const newUser = document.getElementById('newUsername').value.trim();
+  const newPw   = document.getElementById('newPassword').value;
+  const confPw  = document.getElementById('newPasswordConfirm').value;
+  const errEl   = document.getElementById('credError');
+  errEl.classList.add('d-none');
+
+  if (newPw !== confPw) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('d-none'); return; }
+
+  const btn = document.getElementById('saveCredBtn');
+  btn.disabled = true;
+  const res = await api('/api/setup', {
+    method: 'PUT',
+    body: JSON.stringify({ newUsername: newUser, newPassword: newPw }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    bootstrap.Modal.getInstance(document.getElementById('credentialsModal')).hide();
+    toast('Credentials updated! Logging you out…');
+    setTimeout(async () => {
+      await api('/api/auth', { method: 'DELETE' });
+      localStorage.removeItem('cms_token');
+      window.location.href = 'index.html';
+    }, 1500);
+  } else {
+    if (res.status === 403) {
+      document.getElementById('credEnvWarning').classList.remove('d-none');
+      document.getElementById('credForm').style.display = 'none';
+    } else {
+      errEl.textContent = data.error || 'Failed to update credentials.';
+      errEl.classList.remove('d-none');
+    }
+    btn.disabled = false;
+  }
+});
+
+// Logout (sidebar + account tab)
+async function doLogout() {
+  await api('/api/auth', { method: 'DELETE' });
+  localStorage.removeItem('cms_token');
+  window.location.href = 'index.html';
+}
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+document.getElementById('logoutBtn2').addEventListener('click', doLogout);
+
+loadEvents();
+</script>
+</body>
+</html>

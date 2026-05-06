@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language and Linguistics Seminar</title>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+  <link rel="manifest" href="favicon/site.webmanifest">
+
+  <!-- RSS auto-discovery -->
+  <link rel="alternate" type="application/rss+xml" title="Language &amp; Linguistics Seminar Series" href="/api/rss">
+
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    /* Next Event Feature Card */
+    .next-event-card {
+      background: linear-gradient(135deg, #445AAA 0%, #2e3d8f 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(68,90,170,0.3);
+    }
+    .next-event-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 50%;
+    }
+    .next-event-card .badge-next {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+      backdrop-filter: blur(4px);
+    }
+    .next-event-card h3 { font-weight: 700; margin-bottom: 0.25rem; }
+    .next-event-card .meta { opacity: 0.85; font-size: 0.9rem; }
+    .countdown { display: flex; gap: 1rem; margin-top: 1rem; }
+    .countdown-unit {
+      text-align: center;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      min-width: 58px;
+      backdrop-filter: blur(4px);
+    }
+    .countdown-unit .num { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .countdown-unit .lbl { font-size: 0.65rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Newsletter section */
+    .newsletter-section {
+      background: #f8f9fa;
+      border-radius: 16px;
+      padding: 2.5rem;
+      border: 1px solid #e9ecef;
+    }
+    .newsletter-section h4 { font-weight: 700; color: #1a1a2e; }
+
+    /* RSS button */
+    .rss-btn { color: #f26522; border-color: #f26522; }
+    .rss-btn:hover { background: #f26522; color: white; border-color: #f26522; }
+
+    /* Event card enhancements */
+    .event-year-divider {
+      font-size: 1.5rem; font-weight: 800; color: #445AAA;
+      border-bottom: 3px solid #445AAA;
+      padding-bottom: 0.5rem;
+      margin: 2rem 0 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Acknowledgement overlay -->
+  <div id="overlay">
+    <div class="overlay-content">
+      <div><img src="img/AdobeStock_573031977.jpeg" class="img-fluid w-25 mb-3"></div>
+      <div class="mb-3"><i class="fw-italic" style="font-size: x-small;">Image by Bracknell</i></div>
+      <p class="overlay-text">
+        <span class="display-4 fw-bold">Acknowledgement of Country</span><br class="pb-3">
+        With respect for Aboriginal cultural protocol and out of recognition that its campuses occupy their traditional lands, Western Sydney University acknowledges the Darug, Eora, Dharawal (also referred to as Tharawal) and Wiradjuri peoples and thanks them for their support of its work in their lands in Greater Western Sydney and beyond.
+      </p>
+      <button id="closeOverlay">I Acknowledge</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- Navbar -->
+    <nav class="autohide navbar navbar-expand-xl navbar-dark bg-rcs fixed-top">
+      <div class="container">
+        <div class="d-flex justify-content-center align-items-center w-100" id="navbarSupportedContent">
+          <img src="img/logo.svg" alt="logo" style="width: 16rem !important;" class="img-fluid mx-auto">
+        </div>
+      </div>
+    </nav>
+
+    <!-- Banner -->
+    <section class="p-5 mt-3">
+      <div class="container py-2 border-bottom">
+        <div class="row lh-base d-flex align-items-center">
+          <div class="col-12">
+            <div class="logo-bg">
+              <img src="img/banner (1).svg" style="background-color:#4D59A5;" class="img-fluid rounded rounded-3 w-100" alt="banner">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Welcome -->
+    <section class="p-5 mt-3">
+      <div class="container">
+        <h4 class="display-5">Welcome</h4>
+        <p class="lead">Welcome to the Bi-weekly Research Seminar Series! Join us, hosted by the Languages and Linguistics Academic Program, for an exciting opportunity to engage in intellectual exchange and collaboration. Our series provides a vibrant platform for scholars of diverse linguistic backgrounds to share their latest research findings and explore interdisciplinary partnerships. Through regular seminars, we aim to foster professional development for graduate students and early career researchers while enhancing the visibility of our department. Stay tuned for upcoming events and join us in advancing research and collaboration in the field of languages and linguistics.</p>
+
+        <!-- RSS & Subscribe bar -->
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <a href="/api/rss" class="btn btn-outline-secondary rss-btn btn-sm" target="_blank">
+            <i class="bi bi-rss me-1"></i>RSS Feed
+          </a>
+          <a href="#newsletter" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-envelope me-1"></i>Get Email Updates
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Next Upcoming Event Feature -->
+    <section class="px-5 pb-2" id="nextEventSection" style="display:none">
+      <div class="container">
+        <div class="next-event-card">
+          <div class="badge-next"><i class="bi bi-calendar-event me-1"></i>Next Seminar</div>
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h3 id="nextTitle">Loading…</h3>
+              <p class="meta mb-1"><i class="bi bi-person me-1"></i><strong id="nextSpeaker"></strong></p>
+              <p class="meta mb-1"><i class="bi bi-building me-1"></i><span id="nextInstitution"></span></p>
+              <p class="meta mb-2"><i class="bi bi-clock me-1"></i><span id="nextDateTime"></span></p>
+              <p class="meta mb-0"><i class="bi bi-geo-alt me-1"></i><span id="nextVenue"></span></p>
+            </div>
+            <div class="col-md-4 mt-3 mt-md-0">
+              <div class="countdown" id="countdown"></div>
+              <div class="mt-3">
+                <a id="nextZoomBtn" href="#" class="btn btn-light btn-sm fw-semibold d-none" target="_blank">
+                  <i class="bi bi-camera-video me-1"></i>Join Zoom
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Events listing -->
+    <section id="cards" class="py-5 mt-3 mb-4">
+      <div class="container">
+        <h2 class="text-start display-4 fw-bold py-3 pb-3 mb-3">Presenters</h2>
+
+        <!-- Filters -->
+        <div class="row mb-3 col-12">
+          <div class="d-flex flex-md-nowrap flex-sm-wrap gap-2 mb-3">
+            <select id="monthSelector" class="form-select btn btn-outline-primary">
+              <option value="all">Filter by Month</option>
+              <option value="all">All</option>
+              <option value="01">January</option><option value="02">February</option>
+              <option value="03">March</option><option value="04">April</option>
+              <option value="05">May</option><option value="06">June</option>
+              <option value="07">July</option><option value="08">August</option>
+              <option value="09">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+            <select id="yearSelector" class="form-select btn btn-outline-primary">
+              <option value="all">Filter by Year</option>
+            </select>
+            <input id="nameSearch" type="text" class="form-control" placeholder="Search by speaker name">
+          </div>
+        </div>
+
+        <!-- Cards container -->
+        <div class="row row-cols-1 row-cols-md-1 g-4" id="eventCards">
+          <div class="col text-center py-5 text-muted">
+            <span class="spinner-border spinner-border-sm me-2"></span>Loading events…
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Newsletter Signup -->
+    <section id="newsletter" class="px-5 pb-5">
+      <div class="container">
+        <div class="newsletter-section">
+          <div class="row align-items-center">
+            <div class="col-md-5 mb-3 mb-md-0">
+              <h4><i class="bi bi-envelope-heart me-2 text-primary"></i>Stay Updated</h4>
+              <p class="text-muted mb-0">Subscribe to receive notifications about upcoming seminar events directly to your inbox.</p>
+            </div>
+            <div class="col-md-7">
+              <form id="newsletterForm">
+                <div class="row g-2">
+                  <div class="col-sm-5">
+                    <input type="text" class="form-control" id="subName" placeholder="Your name (optional)">
+                  </div>
+                  <div class="col-sm-5">
+                    <input type="email" class="form-control" id="subEmail" placeholder="Email address" required>
+                  </div>
+                  <div class="col-sm-2">
+                    <button type="submit" class="btn btn-primary w-100">Subscribe</button>
+                  </div>
+                </div>
+                <div id="subMessage" class="mt-2 small" style="display:none"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="container-fluid py-4 bg-light shadow-sm p-3 mt-4">
+      <div class="container">
+        <div class="row mx-auto align-items-center justify-content-center">
+          <div class="col">
+            <img src="img/WSU_Logo_HumCom Arts_RGB.svg" alt="" class="img-fluid d-sm-block" style="width: 12rem">
+          </div>
+        </div>
+        <div class="text-center mt-5">
+          <p class="text-muted mb-1">© 2025 Western Sydney University</p>
+          <a href="/api/rss" class="text-muted small text-decoration-none rss-link"><i class="bi bi-rss me-1"></i>RSS Feed</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+  <script>
+  // ── Overlay ──────────────────────────────────────────────────
+  document.getElementById('closeOverlay').addEventListener('click', () => {
+    document.getElementById('overlay').style.display = 'none';
+  });
+
+  // ── Navbar autohide ──────────────────────────────────────────
+  const navbar = document.querySelector('.navbar');
+  navbar.style.top = '-200px';
+  window.addEventListener('scroll', () => {
+    navbar.style.top = window.scrollY > 50 ? '0' : '-200px';
+  });
+
+  // ── Utilities ────────────────────────────────────────────────
+  function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(dateStr, timeStr) {
+    const d = new Date(dateStr + 'T' + (timeStr || '13:00') + ':00');
+    return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+      + ', ' + d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' AEST';
+  }
+
+  function formatDateShort(dateStr) {
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-AU', {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+    });
+  }
+
+  // ── ICS Download ─────────────────────────────────────────────
+  function formatICS(date) {
+    return date.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  }
+
+  function downloadICS(event) {
+    const start = new Date(event.date + 'T' + (event.time || '13:00') + ':00');
+    const end   = new Date(event.date + 'T' + (event.endTime || '14:00') + ':00');
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//WSU Ling Seminar//EN',
+      'BEGIN:VEVENT',
+      `UID:${event.id}@ling-seminar.wsu.edu.au`,
+      `DTSTAMP:${formatICS(new Date())}`,
+      `DTSTART:${formatICS(start)}`,
+      `DTEND:${formatICS(end)}`,
+      `SUMMARY:${(event.title && event.title !== 'TBA' ? event.title : 'Language & Linguistics Seminar: ' + event.speaker).replace(/,/g,'\\,')}`,
+      `DESCRIPTION:Speaker: ${event.speaker}\\n${event.institution || ''}\\n${event.abstract ? event.abstract.substring(0,300) : ''}`,
+      `LOCATION:${event.venue || 'Via Zoom'}`,
+      event.zoomLink ? `URL:${event.zoomLink}` : '',
+      'END:VEVENT', 'END:VCALENDAR'
+    ].filter(Boolean).join('\r\n');
+
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })),
+      download: `seminar-${event.date}.ics`,
+    });
+    a.click();
+  }
+
+  // ── Render a single event card ───────────────────────────────
+  function renderCard(e) {
+    const dateLabel = formatDateShort(e.date);
+    const title = e.title && e.title !== 'TBA' ? escHtml(e.title) : '<em class="text-muted">Title TBA</em>';
+    const hasZoom = !!e.zoomLink;
+    const hasPdf  = !!e.abstractPdf;
+    const hasAbstract = !!(e.abstract && e.abstract.trim());
+    const abstractId = 'abs-' + e.id;
+
+    return `
+    <div class="col">
+      <div class="card h-100">
+        <div class="card-body">
+          <p class="text-start fs-6 text-dark-emphasis mb-1">${dateLabel}</p>
+          <h4 class="fw-bold title">${title}</h4>
+          <h5 class="card-title pt-2 fs-5 fw-normal">${escHtml(e.speaker)}</h5>
+          ${e.institution ? `<p class="text-body-secondary" style="font-size:small">${escHtml(e.institution)}</p>` : ''}
+          <p class="text-body-secondary mb-1">
+            <i class="bi bi-clock me-1"></i>
+            ${new Date(e.date + 'T' + (e.time||'13:00')).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true})} –
+            ${new Date(e.date + 'T' + (e.endTime||'14:00')).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true})} AEST
+          </p>
+          ${e.venue ? `<p class="text-body-secondary mb-3"><i class="bi bi-geo-alt me-1"></i>${escHtml(e.venue)}</p>` : ''}
+
+          ${hasAbstract ? `
+          <div class="collapse" id="${abstractId}">
+            <h5 class="mt-2">Abstract</h5>
+            <p class="card-text">${escHtml(e.abstract)}</p>
+          </div>` : ''}
+
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            ${hasZoom ? `<a href="${escHtml(e.zoomLink)}" class="btn btn-primary btn-sm zoom-link" target="_blank"><i class="bi bi-camera-video me-1"></i>Zoom link</a>` : ''}
+            ${hasAbstract ? `<button class="btn btn-warning btn-sm"
+              data-bs-toggle="collapse" data-bs-target="#${abstractId}"
+              onclick="this.textContent = this.textContent === 'View Abstract' ? 'Hide Abstract' : 'View Abstract'">
+              View Abstract
+            </button>` : ''}
+            ${hasPdf ? `<a href="${escHtml(e.abstractPdf)}" class="btn btn-warning btn-sm" target="_blank">View Abstract</a>` : ''}
+            <button class="btn btn-outline-primary btn-sm" onclick="downloadICS(${escHtml(JSON.stringify(e))})">
+              <i class="bi bi-calendar-plus me-1"></i>Add to Calendar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Load & render events ─────────────────────────────────────
+  let allEvents = [];
+  let filteredEvents = [];
+  let currentPage = 1;
+  const PER_PAGE = 5;
+
+  async function loadEvents() {
+    try {
+      const res = await fetch('/api/events');
+      allEvents = await res.json();
+    } catch {
+      document.getElementById('eventCards').innerHTML =
+        '<div class="col"><div class="alert alert-danger">Failed to load events. Please try again later.</div></div>';
+      return;
+    }
+    // Build year filter dynamically from actual event data
+    const years = [...new Set(allEvents.map(e => e.date.substring(0, 4)))].sort((a, b) => b - a);
+    const ySel = document.getElementById('yearSelector');
+    ySel.innerHTML = '<option value="all">Filter by Year</option>' +
+      years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+    showNextEvent();
+    applyFiltersAndRender();
+  }
+
+  // ── Next upcoming event ──────────────────────────────────────
+  function showNextEvent() {
+    const now = new Date();
+    const upcoming = allEvents
+      .filter(e => new Date(e.date + 'T' + (e.endTime || '14:00') + ':00') > now)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (!upcoming.length) return;
+    const e = upcoming[0];
+
+    document.getElementById('nextTitle').textContent =
+      (e.title && e.title !== 'TBA') ? e.title : 'Upcoming Seminar';
+    document.getElementById('nextSpeaker').textContent = e.speaker;
+    document.getElementById('nextInstitution').textContent = e.institution || '';
+    document.getElementById('nextDateTime').textContent = formatDate(e.date, e.time);
+    document.getElementById('nextVenue').textContent = e.venue || '';
+
+    if (e.zoomLink) {
+      const btn = document.getElementById('nextZoomBtn');
+      btn.href = e.zoomLink;
+      btn.classList.remove('d-none');
+    }
+
+    document.getElementById('nextEventSection').style.display = '';
+    startCountdown(new Date(e.date + 'T' + (e.time || '13:00') + ':00'));
+  }
+
+  function startCountdown(target) {
+    function tick() {
+      const diff = target - new Date();
+      if (diff <= 0) { document.getElementById('countdown').innerHTML = '<span class="text-white fw-bold">Happening now!</span>'; return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('countdown').innerHTML = [
+        [d, 'days'], [h, 'hrs'], [m, 'min'], [s, 'sec']
+      ].map(([n, l]) => `<div class="countdown-unit"><div class="num">${String(n).padStart(2,'0')}</div><div class="lbl">${l}</div></div>`).join('');
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  // ── Filtering & pagination ───────────────────────────────────
+  function applyFiltersAndRender() {
+    const month  = document.getElementById('monthSelector').value;
+    const year   = document.getElementById('yearSelector').value;
+    const search = document.getElementById('nameSearch').value.trim().toLowerCase();
+
+    filteredEvents = allEvents.filter(e => {
+      if (month !== 'all' && !e.date.startsWith('????-' + month) && e.date.substring(5, 7) !== month) return false;
+      if (year  !== 'all' && !e.date.startsWith(year)) return false;
+      if (search && !e.speaker.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    // Upcoming events first (soonest → latest), then past events (most recent → oldest)
+    filteredEvents.sort((a, b) => {
+      const now = new Date();
+      const aDate = new Date(a.date + 'T23:59:59');
+      const bDate = new Date(b.date + 'T23:59:59');
+      const aUp = aDate >= now;
+      const bUp = bDate >= now;
+      if (aUp && bUp)   return aDate - bDate; // both upcoming: soonest first
+      if (!aUp && !bUp) return bDate - aDate; // both past: most recent first
+      return aUp ? -1 : 1;                    // upcoming always before past
+    });
+
+    currentPage = 1;
+    renderPage();
+  }
+
+  function renderPage() {
+    const container = document.getElementById('eventCards');
+    const start = (currentPage - 1) * PER_PAGE;
+    const pageEvents = filteredEvents.slice(start, start + PER_PAGE);
+
+    if (!filteredEvents.length) {
+      container.innerHTML = '<div class="col text-center py-5 text-muted">No events match your filters.</div>';
+      renderPagination();
+      return;
+    }
+
+    container.innerHTML = pageEvents.map(renderCard).join('');
+    renderPagination();
+  }
+
+  function renderPagination() {
+    let pag = document.getElementById('pagination');
+    if (!pag) {
+      pag = document.createElement('div');
+      pag.id = 'pagination';
+      pag.className = 'd-flex justify-content-center gap-1 mt-4 flex-wrap';
+      document.getElementById('eventCards').after(pag);
+    }
+    pag.innerHTML = '';
+    const total = Math.ceil(filteredEvents.length / PER_PAGE);
+    if (total <= 1) return;
+
+    const prev = document.createElement('button');
+    prev.textContent = 'Previous';
+    prev.className = 'btn btn-outline-secondary btn-sm';
+    prev.disabled = currentPage === 1;
+    prev.onclick = () => { currentPage--; renderPage(); window.scrollTo(0, document.getElementById('cards').offsetTop - 20); };
+    pag.appendChild(prev);
+
+    for (let i = 1; i <= total; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = 'btn btn-sm ' + (i === currentPage ? 'btn-primary' : 'btn-outline-primary');
+      btn.onclick = () => { currentPage = i; renderPage(); window.scrollTo(0, document.getElementById('cards').offsetTop - 20); };
+      pag.appendChild(btn);
+    }
+
+    const next = document.createElement('button');
+    next.textContent = 'Next';
+    next.className = 'btn btn-outline-secondary btn-sm';
+    next.disabled = currentPage === total;
+    next.onclick = () => { currentPage++; renderPage(); window.scrollTo(0, document.getElementById('cards').offsetTop - 20); };
+    pag.appendChild(next);
+  }
+
+  ['monthSelector','yearSelector'].forEach(id =>
+    document.getElementById(id).addEventListener('change', applyFiltersAndRender)
+  );
+  document.getElementById('nameSearch').addEventListener('input', applyFiltersAndRender);
+
+  // ── Newsletter signup ────────────────────────────────────────
+  document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('subMessage');
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('subEmail').value,
+          name:  document.getElementById('subName').value,
+        }),
+      });
+      const data = await res.json();
+      msg.className = 'mt-2 small ' + (res.ok ? 'text-success' : 'text-danger');
+      msg.textContent = data.message || data.error;
+      msg.style.display = 'block';
+      if (res.ok) { document.getElementById('subEmail').value = ''; document.getElementById('subName').value = ''; }
+    } catch {
+      msg.className = 'mt-2 small text-danger';
+      msg.textContent = 'Network error. Please try again.';
+      msg.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  loadEvents();
+  </script>
+</body>
+</html>

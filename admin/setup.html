@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>First-Time Setup – Linguistics Seminar CMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { background: #f0f2f5; }
+    .setup-card {
+      max-width: 480px;
+      margin: 8vh auto 0;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(68,90,170,0.15);
+    }
+    .setup-header {
+      background: linear-gradient(135deg, #445AAA 0%, #2e3d8f 100%);
+      color: white;
+      border-radius: 16px 16px 0 0;
+      padding: 2rem;
+      text-align: center;
+    }
+    .setup-header h4 { margin: 0; font-weight: 700; }
+    .setup-header p { opacity: 0.85; font-size: 0.87rem; margin: 0.4rem 0 0; }
+    .step-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #445AAA; color: white; font-weight: 700; font-size: 0.8rem;
+      margin-right: 0.5rem;
+    }
+    .strength-bar { height: 4px; border-radius: 2px; transition: all 0.3s; }
+    .btn-brand { background: #445AAA; border-color: #445AAA; color: white; }
+    .btn-brand:hover { background: #3449a0; border-color: #3449a0; color: white; }
+    #errorMsg, #successMsg { display: none; }
+  </style>
+</head>
+<body>
+  <div class="setup-card card">
+    <div class="setup-header">
+      <i class="bi bi-shield-lock fs-2 mb-2 d-block"></i>
+      <h4>First-Time Setup</h4>
+      <p>Create your admin account to access the CMS.</p>
+    </div>
+    <div class="card-body p-4">
+
+      <div class="alert alert-info py-2 small mb-4">
+        <i class="bi bi-info-circle me-1"></i>
+        This page is only available once — after creating your account, it will no longer be accessible.
+      </div>
+
+      <div id="errorMsg" class="alert alert-danger py-2 small"></div>
+      <div id="successMsg" class="alert alert-success py-2 small"></div>
+
+      <form id="setupForm">
+        <!-- Step 1 -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <span class="step-badge">1</span>Choose a username
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="username" minlength="3" maxlength="40"
+              placeholder="e.g. admin" autocomplete="username" required>
+          </div>
+          <div class="form-text">Minimum 3 characters. You'll use this to log in.</div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <span class="step-badge">2</span>Create a password
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="password" minlength="8"
+              placeholder="At least 8 characters" autocomplete="new-password" required id="password">
+            <button class="btn btn-outline-secondary" type="button" id="togglePw1" tabindex="-1">
+              <i class="bi bi-eye" id="eye1"></i>
+            </button>
+          </div>
+          <div class="mt-1">
+            <div class="strength-bar bg-secondary w-100" id="strengthBar"></div>
+            <small id="strengthLabel" class="text-muted"></small>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">
+            <span class="step-badge">3</span>Confirm your password
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" class="form-control" id="confirmPassword"
+              placeholder="Repeat your password" autocomplete="new-password" required>
+            <button class="btn btn-outline-secondary" type="button" id="togglePw2" tabindex="-1">
+              <i class="bi bi-eye" id="eye2"></i>
+            </button>
+          </div>
+          <div id="matchMsg" class="form-text"></div>
+        </div>
+
+        <button type="submit" class="btn btn-brand w-100 fw-semibold" id="setupBtn">
+          <span id="setupSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+          <i class="bi bi-check2-circle me-1"></i>Create Admin Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, skip setup
+    if (localStorage.getItem('cms_token')) window.location.href = 'dashboard.html';
+
+    // Check setup isn't already done
+    (async () => {
+      const res = await fetch('/api/setup').catch(() => null);
+      if (!res) return;
+      const data = await res.json();
+      if (!data.setupRequired) window.location.href = 'index.html';
+    })();
+
+    // Password visibility toggles
+    function toggleVis(btnId, inputId, iconId) {
+      document.getElementById(btnId).addEventListener('click', () => {
+        const inp = document.getElementById(inputId);
+        const ico = document.getElementById(iconId);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+      });
+    }
+    toggleVis('togglePw1', 'password', 'eye1');
+    toggleVis('togglePw2', 'confirmPassword', 'eye2');
+
+    // Password strength meter
+    document.getElementById('password').addEventListener('input', function () {
+      const v = this.value;
+      const bar = document.getElementById('strengthBar');
+      const lbl = document.getElementById('strengthLabel');
+      let score = 0;
+      if (v.length >= 8) score++;
+      if (v.length >= 12) score++;
+      if (/[A-Z]/.test(v)) score++;
+      if (/[0-9]/.test(v)) score++;
+      if (/[^A-Za-z0-9]/.test(v)) score++;
+      const levels = [
+        { w: '20%', cls: 'bg-danger',  txt: 'Very weak' },
+        { w: '40%', cls: 'bg-warning', txt: 'Weak' },
+        { w: '60%', cls: 'bg-info',    txt: 'Fair' },
+        { w: '80%', cls: 'bg-primary', txt: 'Strong' },
+        { w: '100%',cls: 'bg-success', txt: 'Very strong' },
+      ];
+      const level = levels[Math.min(score, 4)];
+      bar.style.width = v.length ? level.w : '0';
+      bar.className = 'strength-bar ' + (v.length ? level.cls : 'bg-secondary');
+      lbl.textContent = v.length ? level.txt : '';
+    });
+
+    // Match check
+    document.getElementById('confirmPassword').addEventListener('input', function () {
+      const pw = document.getElementById('password').value;
+      const msg = document.getElementById('matchMsg');
+      if (!this.value) { msg.textContent = ''; return; }
+      if (this.value === pw) {
+        msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Passwords match</span>';
+      } else {
+        msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Passwords do not match</span>';
+      }
+    });
+
+    document.getElementById('setupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('setupBtn');
+      const spinner = document.getElementById('setupSpinner');
+      const errorMsg = document.getElementById('errorMsg');
+      const successMsg = document.getElementById('successMsg');
+
+      const pw = document.getElementById('password').value;
+      const cpw = document.getElementById('confirmPassword').value;
+      if (pw !== cpw) {
+        errorMsg.textContent = 'Passwords do not match.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      spinner.classList.remove('d-none');
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value.trim(),
+            password: pw,
+            confirmPassword: cpw,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          successMsg.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + data.message + ' Redirecting to login…';
+          successMsg.style.display = 'block';
+          document.getElementById('setupForm').style.display = 'none';
+          setTimeout(() => window.location.href = 'index.html', 2000);
+        } else {
+          errorMsg.textContent = data.error || 'Setup failed.';
+          errorMsg.style.display = 'block';
+          btn.disabled = false;
+          spinner.classList.add('d-none');
+        }
+      } catch {
+        errorMsg.textContent = 'Network error. Please try again.';
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+      }
+    });
+  </script>
+</body>
+</html>

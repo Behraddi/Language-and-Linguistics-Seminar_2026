@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 490 216.22">
+  <defs>
+    <style>
+      .cls-1 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-3 {
+        font-size: 10.56px;
+        letter-spacing: .5em;
+      }
+
+      .cls-3, .cls-4 {
+        font-family: Helvetica, Helvetica;
+      }
+
+      .cls-3, .cls-4, .cls-5, .cls-6 {
+        fill: #fff;
+      }
+
+      .cls-7 {
+        letter-spacing: 0em;
+      }
+
+      .cls-8 {
+        letter-spacing: 0em;
+      }
+
+      .cls-4 {
+        font-size: 6.73px;
+        letter-spacing: .5em;
+      }
+
+      .cls-9 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-10 {
+        letter-spacing: 0em;
+      }
+
+      .cls-5 {
+        stroke-width: 0px;
+      }
+
+      .cls-6 {
+        font-family: Montserrat-Black, Montserrat;
+        font-size: 22.84px;
+        font-weight: 800;
+      }
+    </style>
+  </defs>
+  <text class="cls-6" transform="translate(175.88 108.76)"><tspan class="cls-8" x="0" y="0">L</tspan><tspan x="14.32" y="0">ANG</tspan><tspan class="cls-9" x="68.64" y="0">U</tspan><tspan class="cls-10" x="86.2" y="0">A</tspan><tspan x="104.38" y="0">GES</tspan><tspan x="0" y="23">LINGU</tspan><tspan class="cls-1" x="75.9" y="23">S</tspan><tspan class="cls-7" x="90.68" y="23">TIC</tspan></text>
+  <text class="cls-3" transform="translate(232.23 144.25)"><tspan x="0" y="0">2024</tspan></text>
+  <text class="cls-4" transform="translate(328.75 108.11)"><tspan x="0" y="0">&amp;</tspan></text>
+  <path class="cls-5" d="M153.02,144.05v-16.78h6.16v10.61h67.71v6.17h-73.87Z"/>
+  <path class="cls-2" d="M165.49,72.69c1.58.77,3.02,1.61,4.56,2.16,1.47.53,1.81,1.35,1.8,2.86-.05,17.6-.02,35.21-.01,52.81,0,.32,0,.64,0,1h-6.36v-58.84Z"/>
+  <path class="cls-5" d="M153.05,66.89c2.04.97,3.97,1.86,5.86,2.82.2.1.28.6.28.91.02,7.55.03,15.11.03,22.66,0,8.62,0,17.24,0,25.86,0,.35,0,.69,0,1.09h-6.16v-53.35Z"/>
+</svg>

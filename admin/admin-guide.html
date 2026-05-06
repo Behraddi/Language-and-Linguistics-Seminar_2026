@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Guide – Linguistics Seminar CMS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: white;
+    }
+
+    @page {
+      size: A4;
+      margin: 20mm 18mm 20mm 18mm;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      body { font-size: 12px; }
+    }
+
+    .page { max-width: 760px; margin: 0 auto; padding: 2rem; }
+
+    /* Cover */
+    .cover {
+      background: linear-gradient(135deg, #445AAA 0%, #2e3d8f 100%);
+      color: white;
+      padding: 3.5rem 3rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -40px;
+      width: 250px; height: 250px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .cover-inner { position: relative; z-index: 1; }
+    .cover h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .cover .sub { font-size: 1rem; opacity: 0.85; margin-bottom: 1.5rem; }
+    .cover .meta { font-size: 0.82rem; opacity: 0.7; }
+    .cover .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      margin-bottom: 1rem;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Print button */
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #445AAA;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      font-family: inherit;
+    }
+    .print-btn:hover { background: #3449a0; }
+
+    /* Sections */
+    .section { margin-bottom: 2rem; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #f0f4ff;
+      border-left: 4px solid #445AAA;
+      padding: 0.6rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 1rem;
+    }
+    .section-header .num {
+      background: #445AAA;
+      color: white;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1rem; font-weight: 700; color: #445AAA; }
+
+    /* Steps */
+    .steps { list-style: none; }
+    .steps li {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      align-items: flex-start;
+    }
+    .step-dot {
+      width: 22px; height: 22px;
+      background: #445AAA;
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .steps li p { margin: 0; }
+    .steps li strong { color: #1a1a2e; }
+
+    /* Info boxes */
+    .info-box {
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      margin: 0.75rem 0;
+      font-size: 0.87rem;
+    }
+    .info-box.blue  { background: #eff6ff; border-left: 3px solid #3b82f6; }
+    .info-box.green { background: #f0fdf4; border-left: 3px solid #22c55e; }
+    .info-box.amber { background: #fffbeb; border-left: 3px solid #f59e0b; }
+    .info-box.red   { background: #fef2f2; border-left: 3px solid #ef4444; }
+    .info-box .label { font-weight: 700; margin-bottom: 0.2rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-box.blue .label  { color: #2563eb; }
+    .info-box.green .label { color: #16a34a; }
+    .info-box.amber .label { color: #d97706; }
+    .info-box.red .label   { color: #dc2626; }
+
+    /* Table */
+    .guide-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.87rem; }
+    .guide-table th {
+      background: #445AAA;
+      color: white;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    .guide-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid #e5e7eb; }
+    .guide-table tr:nth-child(even) td { background: #f9fafb; }
+
+    code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.82rem;
+      font-family: 'Courier New', monospace;
+      color: #445AAA;
+    }
+
+    /* Field reference */
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.75rem 0; }
+    .field-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.84rem;
+    }
+    .field-item .fname { font-weight: 600; color: #445AAA; }
+    .field-item .fdesc { color: #6b7280; font-size: 0.8rem; }
+    .field-item .req { color: #ef4444; font-size: 0.75rem; }
+
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5rem 0; }
+    p { margin-bottom: 0.5rem; }
+
+    .url-badge {
+      display: inline-block;
+      background: #1e293b;
+      color: #7dd3fc;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      margin: 0.2rem 0;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Print button (not printed) -->
+  <div class="no-print" style="text-align:right; margin-bottom:1rem;">
+    <button class="print-btn" onclick="window.print()">
+      &#x1F5A8; Save / Print as PDF
+    </button>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-inner">
+      <div class="badge">Admin Guide</div>
+      <h1>Seminar CMS<br>Admin Panel Guide</h1>
+      <p class="sub">Language &amp; Linguistics Research Seminar Series<br>Western Sydney University</p>
+      <p class="meta">Languages and Linguistics Academic Program &nbsp;|&nbsp; cms.yourdomain.edu.au</p>
+    </div>
+  </div>
+
+  <!-- Section 1: Access -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">1</div>
+      <h2>Accessing the Admin Panel</h2>
+    </div>
+
+    <p>The admin panel is a private web page that only you can access. You manage everything — events, subscribers, settings — from here. No coding required.</p>
+
+    <p style="margin-top:0.75rem"><strong>Admin panel URL:</strong></p>
+    <div class="url-badge">https://your-site.pages.dev/admin/</div>
+
+    <div class="info-box blue" style="margin-top:0.75rem">
+      <div class="label">Tip</div>
+      Bookmark this URL in your browser so you can get back to it quickly.
+    </div>
+  </div>
+
+  <!-- Section 2: First-time setup -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">2</div>
+      <h2>First-Time Setup — Creating Your Admin Account</h2>
+    </div>
+
+    <p>The very first time anyone visits the admin panel, they will be taken to a <strong>Setup page</strong> to create the admin account. This only happens once.</p>
+
+    <ul class="steps">
+      <li>
+        <div class="step-dot">1</div>
+        <p>Go to <code>/admin/</code> in your browser. You will be automatically redirected to the setup page.</p>
+      </li>
+      <li>
+        <div class="step-dot">2</div>
+        <p>Enter a <strong>Username</strong> (minimum 3 characters, e.g. <code>admin</code>).</p>
+      </li>
+      <li>
+        <div class="step-dot">3</div>
+        <p>Enter a <strong>Password</strong> of at least 8 characters. Use the strength indicator to choose a strong one. A mix of letters, numbers and symbols is recommended.</p>
+      </li>
+      <li>
+        <div class="step-dot">4</div>
+        <p><strong>Confirm your password</strong> — type it again to make sure there are no typos.</p>
+      </li>
+      <li>
+        <div class="step-dot">5</div>
+        <p>Click <strong>"Create Admin Account"</strong>. You will be redirected to the login page automatically.</p>
+      </li>
+    </ul>
+
+    <div class="info-box amber">
+      <div class="label">Important</div>
+      Write down or save your username and password somewhere safe. If you forget them, a developer will need to reset them via the Cloudflare dashboard.
+    </div>
+
+    <div class="info-box red">
+      <div class="label">Security Note</div>
+      The setup page is permanently disabled once an account is created. Nobody else can create an account after yours is set up.
+    </div>
+  </div>
+
+  <!-- Section 3: Logging in -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">3</div>
+      <h2>Logging In</h2>
+    </div>
+
+    <ul class="steps">
+      <li>
+        <div class="step-dot">1</div>
+        <p>Go to <code>/admin/</code>. The login form will appear.</p>
+      </li>
+      <li>
+        <div class="step-dot">2</div>
+        <p>Enter your <strong>Username</strong> and <strong>Password</strong>.</p>
+      </li>
+      <li>
+        <div class="step-dot">3</div>
+        <p>Click <strong>"Sign In"</strong>. You will be taken to the dashboard.</p>
+      </li>
+    </ul>
+
+    <div class="info-box blue">
+      <div class="label">Session Duration</div>
+      Your login session lasts 24 hours. After that you will need to log in again.
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Section 4: Dashboard overview -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">4</div>
+      <h2>Dashboard Overview</h2>
+    </div>
+
+    <p>The dashboard has four sections accessible from the left sidebar:</p>
+
+    <table class="guide-table">
+      <thead>
+        <tr><th>Section</th><th>What you can do</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Events</strong></td>
+          <td>Add, edit, and delete seminar events. See stats for upcoming vs. past events.</td>
+        </tr>
+        <tr>
+          <td><strong>Subscribers</strong></td>
+          <td>View everyone who signed up for email updates. Export as CSV. Remove subscribers.</td>
+        </tr>
+        <tr>
+          <td><strong>Tools</strong></td>
+          <td>Seed initial data, copy RSS feed URL, copy subscriber emails, clear all events.</td>
+        </tr>
+        <tr>
+          <td><strong>Account</strong></td>
+          <td>Change your username and password.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 5: Managing events -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">5</div>
+      <h2>Managing Events</h2>
+    </div>
+
+    <p><strong>Adding a new event:</strong></p>
+    <ul class="steps">
+      <li><div class="step-dot">1</div><p>Click the blue <strong>"Add Event"</strong> button (top right of the Events page).</p></li>
+      <li><div class="step-dot">2</div><p>Fill in the event details in the form that appears (see field guide below).</p></li>
+      <li><div class="step-dot">3</div><p>Click <strong>"Save Event"</strong>. The event appears on the public website immediately.</p></li>
+    </ul>
+
+    <p style="margin-top:1rem"><strong>Editing an event:</strong></p>
+    <ul class="steps">
+      <li><div class="step-dot">1</div><p>Find the event in the list. Use the search or filter controls at the top if needed.</p></li>
+      <li><div class="step-dot">2</div><p>Click the <strong>pencil icon</strong> (✏️) on the right side of the row.</p></li>
+      <li><div class="step-dot">3</div><p>Update the fields and click <strong>"Save Event"</strong>.</p></li>
+    </ul>
+
+    <p style="margin-top:1rem"><strong>Deleting an event:</strong></p>
+    <ul class="steps">
+      <li><div class="step-dot">1</div><p>Click the <strong>red bin icon</strong> (🗑) next to the event.</p></li>
+      <li><div class="step-dot">2</div><p>Confirm the deletion in the popup. <em>This cannot be undone.</em></p></li>
+    </ul>
+
+    <p style="margin-top:1rem"><strong>Event fields reference:</strong></p>
+    <div class="field-grid">
+      <div class="field-item">
+        <div class="fname">Date <span class="req">required</span></div>
+        <div class="fdesc">The date of the seminar (use the date picker)</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Start / End Time</div>
+        <div class="fdesc">Defaults to 1:00 PM – 2:00 PM AEST</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Speaker(s) <span class="req">required</span></div>
+        <div class="fdesc">Full name(s) including title, e.g. Dr Jane Smith</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Institution</div>
+        <div class="fdesc">The speaker's university or organisation</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Talk Title</div>
+        <div class="fdesc">Leave blank to show "TBA" on the website</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Abstract</div>
+        <div class="fdesc">Full talk summary. Hidden behind a "Show Abstract" button.</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Venue</div>
+        <div class="fdesc">e.g. "Parramatta South Campus EB.3.36" or "Via Zoom"</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Zoom Link</div>
+        <div class="fdesc">Full Zoom URL — automatically activates 10 min before the event</div>
+      </div>
+      <div class="field-item">
+        <div class="fname">Abstract PDF</div>
+        <div class="fdesc">Path to a PDF, e.g. <code>Abstracts/speaker.pdf</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6: Subscribers -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">6</div>
+      <h2>Newsletter Subscribers</h2>
+    </div>
+
+    <p>People who sign up on the public website appear in the <strong>Subscribers</strong> tab. From here you can:</p>
+
+    <ul style="padding-left:1.5rem; margin-bottom:0.75rem">
+      <li style="margin-bottom:0.4rem"><strong>View all subscribers</strong> — name, email, and date they signed up.</li>
+      <li style="margin-bottom:0.4rem"><strong>Export to CSV</strong> — download the list as a spreadsheet for mail merge or email campaigns.</li>
+      <li style="margin-bottom:0.4rem"><strong>Remove a subscriber</strong> — click the red bin icon next to their row.</li>
+    </ul>
+
+    <p><strong>Sending a newsletter:</strong></p>
+    <p>Go to <strong>Tools → Send Newsletter → Copy All Emails</strong>. This copies all subscriber email addresses to your clipboard. Paste them into your email client (Outlook, Gmail, etc.) as BCC recipients, write your update, and send.</p>
+
+    <div class="info-box blue">
+      <div class="label">RSS Feed</div>
+      The site also has a live RSS feed at <code>/api/rss</code> that automatically lists upcoming events. Share this URL with subscribers who prefer RSS readers.
+    </div>
+  </div>
+
+  <!-- Section 7: Changing your password -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">7</div>
+      <h2>Changing Your Username or Password</h2>
+    </div>
+
+    <ul class="steps">
+      <li><div class="step-dot">1</div><p>Click <strong>"Account"</strong> in the left sidebar.</p></li>
+      <li><div class="step-dot">2</div><p>Click <strong>"Change Credentials"</strong>.</p></li>
+      <li><div class="step-dot">3</div><p>Enter your new username and a new password (minimum 8 characters).</p></li>
+      <li><div class="step-dot">4</div><p>Click <strong>"Save Changes"</strong>. You will be logged out and must sign in with the new credentials.</p></li>
+    </ul>
+
+    <div class="info-box amber">
+      <div class="label">Note</div>
+      After saving, you are automatically logged out for security. Log back in with your new credentials immediately to make sure they work.
+    </div>
+  </div>
+
+  <!-- Section 8: Troubleshooting -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">8</div>
+      <h2>Troubleshooting</h2>
+    </div>
+
+    <table class="guide-table">
+      <thead>
+        <tr><th>Problem</th><th>Solution</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Forgot password</td>
+          <td>Contact your developer to reset credentials via the Cloudflare dashboard.</td>
+        </tr>
+        <tr>
+          <td>Events not appearing on the website</td>
+          <td>Check that the event was saved — go to the Events tab and look for it in the list. Try refreshing the public site.</td>
+        </tr>
+        <tr>
+          <td>Zoom link not showing as active</td>
+          <td>The Zoom join button activates automatically 10 minutes before the event start time. It is disabled at other times by design.</td>
+        </tr>
+        <tr>
+          <td>Logged out unexpectedly</td>
+          <td>Sessions expire after 24 hours. Simply log in again.</td>
+        </tr>
+        <tr>
+          <td>"Error saving event" message</td>
+          <td>Make sure all required fields (Date and Speaker) are filled in. Check your internet connection.</td>
+        </tr>
+        <tr>
+          <td>Setup page appears again</td>
+          <td>This should not happen once setup is complete. Contact your developer if it does.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+  <p style="text-align:center; color:#9ca3af; font-size:0.8rem; margin-top:1rem">
+    Languages &amp; Linguistics Academic Program &nbsp;·&nbsp; Western Sydney University &nbsp;·&nbsp; CMS Admin Guide
+  </p>
+
+</div>
+</body>
+</html>
