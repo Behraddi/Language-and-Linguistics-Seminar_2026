@@ -207,6 +207,20 @@
   <div class="tab-pane" id="tab-tools">
     <div class="topbar"><h5><i class="bi bi-tools me-2"></i>Tools</h5></div>
     <div class="row g-3">
+      <div class="col-12">
+        <div class="table-card">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+              <h6 class="fw-bold mb-1"><i class="bi bi-power me-2"></i>Site Status</h6>
+              <p class="text-muted small mb-0" id="maintenanceDesc">Loading…</p>
+            </div>
+            <div class="form-check form-switch fs-4 mb-0">
+              <input class="form-check-input" type="checkbox" role="switch" id="maintenanceToggle" style="cursor:pointer">
+              <label class="form-check-label fw-semibold small" for="maintenanceToggle" id="maintenanceLabel">–</label>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="col-md-6">
         <div class="table-card">
           <h6 class="fw-bold mb-3"><i class="bi bi-database-up me-2"></i>Seed Initial Data</h6>
@@ -411,6 +425,7 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
     link.classList.add('active');
     document.getElementById('tab-' + link.dataset.tab).classList.add('active');
     if (link.dataset.tab === 'subscribers' || link.dataset.tab === 'tools') loadSubscribers();
+    if (link.dataset.tab === 'tools') loadMaintenance();
   });
 });
 
@@ -749,7 +764,44 @@ async function doLogout() {
 document.getElementById('logoutBtn').addEventListener('click', doLogout);
 document.getElementById('logoutBtn2').addEventListener('click', doLogout);
 
+// ─── Maintenance Toggle ─────────────────────────────────────
+async function loadMaintenance() {
+  const res = await api('/api/maintenance');
+  if (!res.ok) return;
+  const { enabled } = await res.json();
+  applyMaintenanceUI(enabled);
+}
+
+function applyMaintenanceUI(enabled) {
+  const toggle = document.getElementById('maintenanceToggle');
+  const label  = document.getElementById('maintenanceLabel');
+  const desc   = document.getElementById('maintenanceDesc');
+  toggle.checked = enabled;
+  if (enabled) {
+    label.textContent = 'Offline';
+    label.className = 'form-check-label fw-semibold small text-danger';
+    desc.textContent = 'The site is offline. Visitors see a maintenance page. Admin panel remains accessible.';
+  } else {
+    label.textContent = 'Online';
+    label.className = 'form-check-label fw-semibold small text-success';
+    desc.textContent = 'The site is live and accessible to everyone.';
+  }
+}
+
+document.getElementById('maintenanceToggle').addEventListener('change', async function () {
+  const enabled = this.checked;
+  applyMaintenanceUI(enabled);
+  const res = await api('/api/maintenance', { method: 'POST', body: JSON.stringify({ enabled }) });
+  if (res.ok) {
+    toast(enabled ? 'Site taken offline.' : 'Site is back online.', enabled ? 'warning' : 'success');
+  } else {
+    applyMaintenanceUI(!enabled); // revert
+    toast('Failed to update site status.', 'danger');
+  }
+});
+
 loadEvents();
+loadMaintenance();
 </script>
 </body>
 </html>
