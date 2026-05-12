@@ -417,7 +417,7 @@
             <strong>Step 1.</strong> Open <strong>Okta Verify</strong>, <strong>Google Authenticator</strong>, <strong>Microsoft Authenticator</strong>, <strong>Authy</strong>, or any TOTP-compatible app and scan the QR code below.
           </p>
           <div class="text-center mb-3" id="twoFAQRWrap">
-            <canvas id="twoFAQRCanvas"></canvas>
+            <!-- QR image injected here by JS -->
           </div>
           <p class="small text-muted text-center mb-1">Or enter this code manually:</p>
           <div class="text-center mb-4">
@@ -873,6 +873,22 @@ loadEvents();
 loadMaintenance();
 
 // ─── Two-Factor Authentication ───────────────────────────────────────────────
+function renderQR(containerId, uri) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '<span class="text-muted small">Generating QR code…</span>';
+  try {
+    QRCode.toDataURL(uri, { width: 220, margin: 2, errorCorrectionLevel: 'M' }, (err, url) => {
+      if (err || !url) {
+        wrap.innerHTML = '<p class="text-warning small mb-0">QR code could not render — use the manual code below instead.</p>';
+        return;
+      }
+      wrap.innerHTML = `<img src="${url}" width="220" height="220" style="border-radius:8px;display:block;margin:auto" alt="QR code">`;
+    });
+  } catch {
+    wrap.innerHTML = '<p class="text-warning small mb-0">QR code could not render — use the manual code below instead.</p>';
+  }
+}
+
 async function load2FAStatus() {
   const res = await api('/api/totp');
   if (!res.ok) return;
@@ -903,7 +919,7 @@ document.getElementById('enable2FABtn').addEventListener('click', async () => {
   document.getElementById('twoFASetupContent').classList.remove('d-none');
   document.getElementById('twoFAVerifyBtn').disabled = false;
   document.getElementById('twoFASecretDisplay').textContent = data.secret;
-  QRCode.toCanvas(document.getElementById('twoFAQRCanvas'), data.uri, { width: 200, margin: 2 });
+  renderQR('twoFAQRWrap', data.uri);
 });
 
 // Verify & enable

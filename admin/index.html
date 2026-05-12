@@ -283,10 +283,14 @@
         document.getElementById('setupSecretDisplay').textContent = data.secret;
         await loadQRLib();
         const wrap = document.getElementById('setupQRWrap');
-        wrap.innerHTML = '';
-        const canvas = document.createElement('canvas');
-        wrap.appendChild(canvas);
-        QRCode.toCanvas(canvas, data.uri, { width: 200, margin: 2 });
+        wrap.innerHTML = '<span class="text-muted small">Generating QR code…</span>';
+        QRCode.toDataURL(data.uri, { width: 220, margin: 2, errorCorrectionLevel: 'M' }, (err, url) => {
+          if (err || !url) {
+            wrap.innerHTML = '<p class="text-warning small mb-0">QR code could not render — enter the code above manually in your app.</p>';
+            return;
+          }
+          wrap.innerHTML = `<img src="${url}" width="220" height="220" style="border-radius:8px;display:block;margin:auto" alt="QR code">`;
+        });
       } catch { showError('Could not load QR code. Please refresh.'); }
     }
 
