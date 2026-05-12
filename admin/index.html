@@ -9,8 +9,8 @@
   <style>
     body { background: #f0f2f5; }
     .login-card {
-      max-width: 420px;
-      margin: 10vh auto 0;
+      max-width: 440px;
+      margin: 8vh auto 0;
       border: none;
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(68,90,170,0.15);
@@ -24,8 +24,9 @@
     }
     .login-header h4 { margin: 0; font-weight: 700; letter-spacing: 0.5px; }
     .login-header small { opacity: 0.8; font-size: 0.85rem; }
-    .btn-brand { background: #445AAA; border-color: #445AAA; }
-    .btn-brand:hover { background: #3449a0; border-color: #3449a0; }
+    .btn-brand { background: #445AAA; border-color: #445AAA; color: white; }
+    .btn-brand:hover { background: #3449a0; border-color: #3449a0; color: white; }
+    .btn-brand:disabled { background: #445AAA; border-color: #445AAA; }
     #errorMsg { display: none; }
     #checkingMsg { color: #6c757d; font-size: 0.85rem; text-align: center; padding: 0.5rem 0; }
     .totp-digits {
@@ -35,6 +36,7 @@
       font-weight: 700;
     }
     .cf-turnstile { display: flex; justify-content: center; margin-bottom: 1rem; }
+    #setupQRWrap canvas { border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -69,13 +71,13 @@
         </div>
         <!-- Cloudflare Turnstile widget injected here when configured -->
         <div id="turnstileContainer"></div>
-        <button type="submit" class="btn btn-brand btn-primary w-100 fw-semibold" id="loginBtn">
+        <button type="submit" class="btn btn-brand w-100 fw-semibold" id="loginBtn">
           <span id="loginSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
           Sign In
         </button>
       </form>
 
-      <!-- Step 2: TOTP code -->
+      <!-- Step 2: TOTP verify (2FA already configured) -->
       <div id="totpForm" style="display:none">
         <div class="text-center mb-4">
           <i class="bi bi-shield-lock fs-1 text-primary d-block mb-2"></i>
@@ -87,7 +89,7 @@
             maxlength="6" pattern="\d{6}" inputmode="numeric"
             placeholder="000000" autocomplete="one-time-code">
         </div>
-        <button type="button" class="btn btn-brand btn-primary w-100 fw-semibold mb-2" id="totpBtn">
+        <button type="button" class="btn btn-brand w-100 fw-semibold mb-2" id="totpBtn">
           <span id="totpSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
           <i class="bi bi-shield-check me-1"></i>Verify
         </button>
@@ -95,34 +97,66 @@
           <i class="bi bi-arrow-left me-1"></i>Back to login
         </button>
       </div>
+
+      <!-- Step 3: Forced first-time TOTP setup -->
+      <div id="totpSetupForm" style="display:none">
+        <div class="text-center mb-3">
+          <i class="bi bi-shield-exclamation fs-1 text-warning d-block mb-2"></i>
+          <h6 class="fw-bold">Set Up Two-Factor Authentication</h6>
+          <p class="text-muted small mb-0">2FA is required to access the admin panel. Scan the QR code with <strong>Okta Verify</strong>, Google Authenticator, Microsoft Authenticator, or Authy.</p>
+        </div>
+        <div id="setupQRWrap" class="text-center mb-3">
+          <span class="spinner-border text-primary"></span>
+        </div>
+        <p class="text-muted small text-center mb-1">Or enter this code manually in your app:</p>
+        <p class="text-center mb-3"><code id="setupSecretDisplay" class="user-select-all small"></code></p>
+        <hr class="my-3">
+        <label class="form-label fw-semibold small">Enter the 6-digit code shown in your app:</label>
+        <div class="mb-3">
+          <input type="text" class="form-control totp-digits" id="setupTotpCode"
+            maxlength="6" pattern="\d{6}" inputmode="numeric"
+            placeholder="000000" autocomplete="one-time-code">
+        </div>
+        <button type="button" class="btn btn-warning w-100 fw-semibold text-dark" id="setupTotpBtn">
+          <span id="setupTotpSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+          <i class="bi bi-check2-circle me-1"></i>Verify &amp; Activate 2FA
+        </button>
+      </div>
+
     </div>
   </div>
 
   <script>
     if (localStorage.getItem('cms_token')) window.location.href = 'dashboard.html';
 
-    let tempToken = null;
+    let tempToken  = null;
+    let setupToken = null;
     let turnstileWidgetId = null;
 
-    // Load Turnstile script dynamically only if a site key is returned
     function loadTurnstile(siteKey) {
       const script = document.createElement('script');
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-      script.async = true;
-      script.defer = true;
+      script.async = true; script.defer = true;
       script.onload = () => {
-        turnstileWidgetId = turnstile.render('#turnstileContainer', {
-          sitekey: siteKey,
-          theme: 'light',
-        });
+        turnstileWidgetId = turnstile.render('#turnstileContainer', { sitekey: siteKey, theme: 'light' });
       };
       document.head.appendChild(script);
     }
 
-    // Check setup and auth config
+    function loadQRLib() {
+      return new Promise(resolve => {
+        if (typeof QRCode !== 'undefined') { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';
+        s.onload = resolve;
+        document.head.appendChild(s);
+      });
+    }
+
+    // Check setup status and Turnstile config
     (async () => {
       try {
-        const res = await fetch('/api/auth');
+        const res  = await fetch('/api/auth');
         const data = await res.json();
         if (data.setupRequired) { window.location.href = 'setup.html'; return; }
         if (data.turnstileSiteKey) loadTurnstile(data.turnstileSiteKey);
@@ -133,18 +167,20 @@
 
     // Password visibility toggle
     document.getElementById('togglePw').addEventListener('click', () => {
-      const pw = document.getElementById('password');
+      const pw   = document.getElementById('password');
       const icon = document.getElementById('eyeIcon');
-      if (pw.type === 'password') { pw.type = 'text'; icon.className = 'bi bi-eye-slash'; }
-      else { pw.type = 'password'; icon.className = 'bi bi-eye'; }
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+      icon.className = pw.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
     });
 
     function showError(msg) {
       const el = document.getElementById('errorMsg');
-      el.textContent = msg;
-      el.style.display = 'block';
+      el.textContent = msg; el.style.display = 'block';
     }
     function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
+
+    function show(id) { document.getElementById(id).style.display = ''; }
+    function hide(id) { document.getElementById(id).style.display = 'none'; }
 
     // ── Step 1: password login ──────────────────────────────────────────────
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -152,12 +188,10 @@
       const btn     = document.getElementById('loginBtn');
       const spinner = document.getElementById('loginSpinner');
       hideError();
-      btn.disabled = true;
-      spinner.classList.remove('d-none');
+      btn.disabled = true; spinner.classList.remove('d-none');
 
       const turnstileToken = (typeof turnstile !== 'undefined' && turnstileWidgetId !== null)
-        ? turnstile.getResponse(turnstileWidgetId)
-        : null;
+        ? turnstile.getResponse(turnstileWidgetId) : null;
 
       try {
         const res = await fetch('/api/auth', {
@@ -179,9 +213,15 @@
 
         if (res.ok && data.requires2FA) {
           tempToken = data.tempToken;
-          document.getElementById('loginForm').style.display = 'none';
-          document.getElementById('totpForm').style.display = '';
+          hide('loginForm'); show('totpForm');
           document.getElementById('totpCode').focus();
+          return;
+        }
+
+        if (res.ok && data.requiresTOTPSetup) {
+          setupToken = data.setupToken;
+          hide('loginForm'); show('totpSetupForm');
+          await initTOTPSetup();
           return;
         }
 
@@ -192,26 +232,23 @@
       } catch {
         showError('Network error. Please check your connection.');
       } finally {
-        btn.disabled = false;
-        spinner.classList.add('d-none');
+        btn.disabled = false; spinner.classList.add('d-none');
       }
     });
 
-    // ── Step 2: TOTP verification ───────────────────────────────────────────
-    document.getElementById('totpBtn').addEventListener('click', async () => {
+    // ── Step 2: TOTP verify ─────────────────────────────────────────────────
+    document.getElementById('totpBtn').addEventListener('click', submitTOTP);
+    document.getElementById('totpCode').addEventListener('keydown', e => { if (e.key === 'Enter') submitTOTP(); });
+    document.getElementById('totpCode').addEventListener('input', function () { if (this.value.length === 6) submitTOTP(); });
+
+    async function submitTOTP() {
+      const code    = document.getElementById('totpCode').value.trim();
       const btn     = document.getElementById('totpBtn');
       const spinner = document.getElementById('totpSpinner');
-      const code    = document.getElementById('totpCode').value.trim();
       hideError();
-
-      if (!/^\d{6}$/.test(code)) {
-        showError('Please enter a 6-digit code.');
-        return;
-      }
-
-      btn.disabled = true;
-      spinner.classList.remove('d-none');
-
+      if (!/^\d{6}$/.test(code)) { showError('Please enter a 6-digit code.'); return; }
+      if (btn.disabled) return;
+      btn.disabled = true; spinner.classList.remove('d-none');
       try {
         const res = await fetch('/api/auth', {
           method: 'POST',
@@ -227,32 +264,62 @@
         showError(data.error || 'Verification failed. Please try again.');
         document.getElementById('totpCode').value = '';
         document.getElementById('totpCode').focus();
-      } catch {
-        showError('Network error. Please check your connection.');
-      } finally {
-        btn.disabled = false;
-        spinner.classList.add('d-none');
-      }
-    });
+      } catch { showError('Network error.'); }
+      finally { btn.disabled = false; spinner.classList.add('d-none'); }
+    }
 
-    // Allow submitting TOTP with Enter key
-    document.getElementById('totpCode').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('totpBtn').click();
-    });
-
-    // Auto-submit when 6 digits typed
-    document.getElementById('totpCode').addEventListener('input', function () {
-      if (this.value.length === 6) document.getElementById('totpBtn').click();
-    });
-
-    // Back to login
     document.getElementById('backToLoginBtn').addEventListener('click', () => {
       tempToken = null;
       document.getElementById('totpCode').value = '';
-      document.getElementById('totpForm').style.display = 'none';
-      document.getElementById('loginForm').style.display = '';
-      hideError();
+      hide('totpForm'); show('loginForm'); hideError();
     });
+
+    // ── Step 3: Forced first-time TOTP setup ────────────────────────────────
+    async function initTOTPSetup() {
+      try {
+        const res  = await fetch(`/api/totp?setupToken=${setupToken}`);
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || 'Setup failed.'); return; }
+        document.getElementById('setupSecretDisplay').textContent = data.secret;
+        await loadQRLib();
+        const wrap = document.getElementById('setupQRWrap');
+        wrap.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        QRCode.toCanvas(canvas, data.uri, { width: 200, margin: 2 });
+      } catch { showError('Could not load QR code. Please refresh.'); }
+    }
+
+    document.getElementById('setupTotpBtn').addEventListener('click', submitSetupTOTP);
+    document.getElementById('setupTotpCode').addEventListener('keydown', e => { if (e.key === 'Enter') submitSetupTOTP(); });
+    document.getElementById('setupTotpCode').addEventListener('input', function () { if (this.value.length === 6) submitSetupTOTP(); });
+
+    async function submitSetupTOTP() {
+      const code    = document.getElementById('setupTotpCode').value.trim();
+      const btn     = document.getElementById('setupTotpBtn');
+      const spinner = document.getElementById('setupTotpSpinner');
+      hideError();
+      if (!/^\d{6}$/.test(code)) { showError('Please enter a 6-digit code.'); return; }
+      if (btn.disabled) return;
+      btn.disabled = true; spinner.classList.remove('d-none');
+      try {
+        const res = await fetch('/api/totp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ setupToken, code }),
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          localStorage.setItem('cms_token', data.token);
+          window.location.href = 'dashboard.html';
+          return;
+        }
+        showError(data.error || 'Verification failed. Please try again.');
+        document.getElementById('setupTotpCode').value = '';
+        document.getElementById('setupTotpCode').focus();
+      } catch { showError('Network error.'); }
+      finally { btn.disabled = false; spinner.classList.add('d-none'); }
+    }
   </script>
 </body>
 </html>

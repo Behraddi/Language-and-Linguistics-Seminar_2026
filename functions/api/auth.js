@@ -19,9 +19,11 @@ function clientIP(request) {
     || 'unknown';
 }
 
-// POST — two-step login
-//   Step 1: { username, password, turnstileToken? }  → { token } or { requires2FA, tempToken }
-//   Step 2: { tempToken, totpCode }                  → { token }
+// POST — three-step login
+//   Step 1: { username, password, turnstileToken? }
+//     → { requires2FA, tempToken }      if TOTP is already configured
+//     → { requiresTOTPSetup, setupToken } if TOTP has never been set up (forced)
+//   Step 2: { tempToken, totpCode }     → { token }
 export async function onRequestPost({ request, env }) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
@@ -71,7 +73,10 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Invalid username or password.' }, 401);
   }
 
-  // TOTP check: if enabled, issue a 5-minute temp token instead of a full session
+  // Clear rate limit on successful credential check
+  await clearRateLimit(ip, env);
+
+  // If TOTP is already configured, require it
   const totpSecret = await env.CMS_KV.get('totp_secret');
   if (totpSecret) {
     const tempToken = crypto.randomUUID();
@@ -79,11 +84,10 @@ export async function onRequestPost({ request, env }) {
     return json({ requires2FA: true, tempToken });
   }
 
-  // No 2FA configured — issue full session
-  await clearRateLimit(ip, env);
-  const token = crypto.randomUUID();
-  await env.CMS_KV.put(`session:${token}`, '1', { expirationTtl: 86400 });
-  return json({ token });
+  // TOTP not configured — force first-time setup before granting access
+  const setupToken = crypto.randomUUID();
+  await env.CMS_KV.put(`setup_session:${setupToken}`, '1', { expirationTtl: 300 });
+  return json({ requiresTOTPSetup: true, setupToken });
 }
 
 // DELETE — logout
