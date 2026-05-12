@@ -4,11 +4,9 @@ async function sha256(text) {
 }
 
 export async function verifyLogin(username, password, env) {
-  // Env vars take priority (for secure production deployments)
   if (env.ADMIN_USER && env.ADMIN_PASS) {
     return username === env.ADMIN_USER && password === env.ADMIN_PASS;
   }
-  // Fall back to KV-stored credentials (created via /admin/setup)
   const stored = await env.CMS_KV.get('admin_credentials', 'json');
   if (!stored) return false;
   const hash = await sha256(password + stored.salt);
@@ -35,6 +33,48 @@ export async function authenticate(request, env) {
   return valid !== null;
 }
 
+// ── Rate limiting ────────────────────────────────────────────────────────────
+const RATE_WINDOW_SEC = 15 * 60;  // 15-minute window
+const RATE_MAX        = 5;        // max failures before lockout
+
+export async function checkRateLimit(ip, env) {
+  const data = await env.CMS_KV.get(`ratelimit:${ip}`, 'json');
+  if (!data) return { blocked: false };
+  if (data.blocked && data.until > Date.now()) {
+    return { blocked: true, retryAfter: Math.ceil((data.until - Date.now()) / 1000) };
+  }
+  return { blocked: false };
+}
+
+export async function recordFailedAttempt(ip, env) {
+  const key = `ratelimit:${ip}`;
+  const data = (await env.CMS_KV.get(key, 'json')) || { count: 0 };
+  data.count = (data.count || 0) + 1;
+  if (data.count >= RATE_MAX) {
+    data.blocked = true;
+    data.until = Date.now() + RATE_WINDOW_SEC * 1000;
+  }
+  await env.CMS_KV.put(key, JSON.stringify(data), { expirationTtl: RATE_WINDOW_SEC });
+}
+
+export async function clearRateLimit(ip, env) {
+  await env.CMS_KV.delete(`ratelimit:${ip}`);
+}
+
+// ── Cloudflare Turnstile ─────────────────────────────────────────────────────
+export async function verifyTurnstile(token, env) {
+  if (!env.TURNSTILE_SECRET_KEY) return true; // not configured — skip
+  if (!token) return false;
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token }),
+  });
+  const data = await res.json();
+  return data.success === true;
+}
+
+// ── Response helpers ─────────────────────────────────────────────────────────
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,

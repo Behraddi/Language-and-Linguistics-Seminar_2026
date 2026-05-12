@@ -28,6 +28,13 @@
     .btn-brand:hover { background: #3449a0; border-color: #3449a0; }
     #errorMsg { display: none; }
     #checkingMsg { color: #6c757d; font-size: 0.85rem; text-align: center; padding: 0.5rem 0; }
+    .totp-digits {
+      font-size: 2rem;
+      letter-spacing: 0.5rem;
+      text-align: center;
+      font-weight: 700;
+    }
+    .cf-turnstile { display: flex; justify-content: center; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
@@ -40,6 +47,8 @@
     <div class="card-body p-4">
       <p id="checkingMsg"><span class="spinner-border spinner-border-sm me-1"></span> Checking…</p>
       <div id="errorMsg" class="alert alert-danger py-2 small"></div>
+
+      <!-- Step 1: Username + password -->
       <form id="loginForm" style="display:none">
         <div class="mb-3">
           <label class="form-label fw-semibold">Username</label>
@@ -58,28 +67,66 @@
             </button>
           </div>
         </div>
+        <!-- Cloudflare Turnstile widget injected here when configured -->
+        <div id="turnstileContainer"></div>
         <button type="submit" class="btn btn-brand btn-primary w-100 fw-semibold" id="loginBtn">
           <span id="loginSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
           Sign In
         </button>
       </form>
+
+      <!-- Step 2: TOTP code -->
+      <div id="totpForm" style="display:none">
+        <div class="text-center mb-4">
+          <i class="bi bi-shield-lock fs-1 text-primary d-block mb-2"></i>
+          <h6 class="fw-bold">Two-Factor Authentication</h6>
+          <p class="text-muted small mb-0">Enter the 6-digit code from <strong>Okta Verify</strong>, Google Authenticator, Microsoft Authenticator, or Authy.</p>
+        </div>
+        <div class="mb-4">
+          <input type="text" class="form-control totp-digits" id="totpCode"
+            maxlength="6" pattern="\d{6}" inputmode="numeric"
+            placeholder="000000" autocomplete="one-time-code">
+        </div>
+        <button type="button" class="btn btn-brand btn-primary w-100 fw-semibold mb-2" id="totpBtn">
+          <span id="totpSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+          <i class="bi bi-shield-check me-1"></i>Verify
+        </button>
+        <button type="button" class="btn btn-link btn-sm w-100 text-muted" id="backToLoginBtn">
+          <i class="bi bi-arrow-left me-1"></i>Back to login
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
-    // Already logged in?
     if (localStorage.getItem('cms_token')) window.location.href = 'dashboard.html';
 
-    // Check whether setup is needed first
+    let tempToken = null;
+    let turnstileWidgetId = null;
+
+    // Load Turnstile script dynamically only if a site key is returned
+    function loadTurnstile(siteKey) {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        turnstileWidgetId = turnstile.render('#turnstileContainer', {
+          sitekey: siteKey,
+          theme: 'light',
+        });
+      };
+      document.head.appendChild(script);
+    }
+
+    // Check setup and auth config
     (async () => {
       try {
-        const res = await fetch('/api/setup');
+        const res = await fetch('/api/auth');
         const data = await res.json();
-        if (data.setupRequired) {
-          window.location.href = 'setup.html';
-          return;
-        }
-      } catch { /* network error – show login anyway */ }
+        if (data.setupRequired) { window.location.href = 'setup.html'; return; }
+        if (data.turnstileSiteKey) loadTurnstile(data.turnstileSiteKey);
+      } catch { /* network error — show login anyway */ }
       document.getElementById('checkingMsg').style.display = 'none';
       document.getElementById('loginForm').style.display = '';
     })();
@@ -92,15 +139,25 @@
       else { pw.type = 'password'; icon.className = 'bi bi-eye'; }
     });
 
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
+
+    // ── Step 1: password login ──────────────────────────────────────────────
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('loginBtn');
+      const btn     = document.getElementById('loginBtn');
       const spinner = document.getElementById('loginSpinner');
-      const errorMsg = document.getElementById('errorMsg');
-
+      hideError();
       btn.disabled = true;
       spinner.classList.remove('d-none');
-      errorMsg.style.display = 'none';
+
+      const turnstileToken = (typeof turnstile !== 'undefined' && turnstileWidgetId !== null)
+        ? turnstile.getResponse(turnstileWidgetId)
+        : null;
 
       try {
         const res = await fetch('/api/auth', {
@@ -109,23 +166,92 @@
           body: JSON.stringify({
             username: document.getElementById('username').value,
             password: document.getElementById('password').value,
+            turnstileToken,
           }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          localStorage.setItem('cms_token', data.token);
+          window.location.href = 'dashboard.html';
+          return;
+        }
+
+        if (res.ok && data.requires2FA) {
+          tempToken = data.tempToken;
+          document.getElementById('loginForm').style.display = 'none';
+          document.getElementById('totpForm').style.display = '';
+          document.getElementById('totpCode').focus();
+          return;
+        }
+
+        showError(data.error || 'Login failed. Please try again.');
+        if (typeof turnstile !== 'undefined' && turnstileWidgetId !== null) {
+          turnstile.reset(turnstileWidgetId);
+        }
+      } catch {
+        showError('Network error. Please check your connection.');
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+      }
+    });
+
+    // ── Step 2: TOTP verification ───────────────────────────────────────────
+    document.getElementById('totpBtn').addEventListener('click', async () => {
+      const btn     = document.getElementById('totpBtn');
+      const spinner = document.getElementById('totpSpinner');
+      const code    = document.getElementById('totpCode').value.trim();
+      hideError();
+
+      if (!/^\d{6}$/.test(code)) {
+        showError('Please enter a 6-digit code.');
+        return;
+      }
+
+      btn.disabled = true;
+      spinner.classList.remove('d-none');
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tempToken, totpCode: code }),
         });
         const data = await res.json();
         if (res.ok && data.token) {
           localStorage.setItem('cms_token', data.token);
           window.location.href = 'dashboard.html';
-        } else {
-          errorMsg.textContent = data.error || 'Login failed. Please try again.';
-          errorMsg.style.display = 'block';
+          return;
         }
+        showError(data.error || 'Verification failed. Please try again.');
+        document.getElementById('totpCode').value = '';
+        document.getElementById('totpCode').focus();
       } catch {
-        errorMsg.textContent = 'Network error. Please check your connection.';
-        errorMsg.style.display = 'block';
+        showError('Network error. Please check your connection.');
       } finally {
         btn.disabled = false;
         spinner.classList.add('d-none');
       }
+    });
+
+    // Allow submitting TOTP with Enter key
+    document.getElementById('totpCode').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('totpBtn').click();
+    });
+
+    // Auto-submit when 6 digits typed
+    document.getElementById('totpCode').addEventListener('input', function () {
+      if (this.value.length === 6) document.getElementById('totpBtn').click();
+    });
+
+    // Back to login
+    document.getElementById('backToLoginBtn').addEventListener('click', () => {
+      tempToken = null;
+      document.getElementById('totpCode').value = '';
+      document.getElementById('totpForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = '';
+      hideError();
     });
   </script>
 </body>
