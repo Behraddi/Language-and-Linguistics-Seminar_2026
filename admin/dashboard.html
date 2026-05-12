@@ -224,6 +224,32 @@
           </button>
         </div>
       </div>
+      <div class="col-12">
+        <div class="table-card">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>Admin Users</h6>
+            <button class="btn btn-primary btn-sm" id="addUserBtn">
+              <i class="bi bi-person-plus me-1"></i>Add Admin User
+            </button>
+          </div>
+          <p class="text-muted small mb-3">Each admin user has their own username, password, and 2FA code. Users cannot delete their own account.</p>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Username</th>
+                  <th>2FA Status</th>
+                  <th>Role</th>
+                  <th style="width:80px">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="4" class="text-center py-3 text-muted"><span class="spinner-border spinner-border-sm"></span> Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -400,6 +426,41 @@
   </div>
 </div>
 
+<!-- Add Admin User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add Admin User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">The new user will be forced to set up their own 2FA on their first login.</p>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Username</label>
+          <input type="text" class="form-control" id="newAdminUsername" minlength="3" maxlength="40" placeholder="e.g. behrad" autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <input type="password" class="form-control" id="newAdminPassword" minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+        </div>
+        <div class="mb-1">
+          <label class="form-label fw-semibold">Confirm Password</label>
+          <input type="password" class="form-control" id="newAdminPasswordConfirm" minlength="8" placeholder="Repeat password" autocomplete="new-password">
+        </div>
+        <div id="addUserError" class="text-danger small mt-2 d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary fw-semibold" id="saveNewUserBtn">
+          <span id="saveNewUserSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+          <i class="bi bi-person-check me-1"></i>Create User
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 2FA Setup Modal -->
 <div class="modal fade" id="twoFAModal" tabindex="-1">
   <div class="modal-dialog">
@@ -464,7 +525,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script>
 const TOKEN = localStorage.getItem('cms_token');
 if (!TOKEN) window.location.href = 'index.html';
@@ -872,20 +933,91 @@ document.getElementById('maintenanceToggle').addEventListener('change', async fu
 loadEvents();
 loadMaintenance();
 
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const res   = await api('/api/users');
+  if (!res.ok) return;
+  const users = await res.json();
+  const tbody = document.getElementById('usersTableBody');
+
+  // Figure out current user's username from the session
+  let currentUsername = null;
+  try {
+    const payload = JSON.parse(atob(TOKEN.split('.')[1] || '') || '{}');
+    currentUsername = payload.username;
+  } catch {}
+
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td class="fw-semibold"><i class="bi bi-person-circle me-1 text-muted"></i>${escHtml(u.username)}</td>
+      <td>${u.has2FA
+        ? '<span class="badge text-bg-success"><i class="bi bi-shield-check me-1"></i>2FA Active</span>'
+        : '<span class="badge text-bg-warning text-dark"><i class="bi bi-shield-exclamation me-1"></i>No 2FA</span>'}</td>
+      <td><span class="badge ${u.isPrimary ? 'text-bg-primary' : 'text-bg-secondary'}">${u.isPrimary ? 'Primary Admin' : 'Admin'}</span></td>
+      <td>${u.isPrimary
+        ? '<button class="btn btn-sm btn-outline-secondary py-0" disabled title="Primary admin cannot be deleted"><i class="bi bi-trash3"></i></button>'
+        : `<button class="btn btn-sm btn-outline-danger py-0" onclick="deleteUser('${escHtml(u.username)}')"><i class="bi bi-trash3"></i></button>`}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="text-center py-3 text-muted">No additional users</td></tr>';
+}
+
+async function deleteUser(username) {
+  if (!confirm(`Delete admin user "${username}"? This cannot be undone.`)) return;
+  const res  = await api('/api/users', { method: 'DELETE', body: JSON.stringify({ username }) });
+  const data = await res.json();
+  if (res.ok) { toast(`User "${username}" deleted.`, 'warning'); loadUsers(); }
+  else toast(data.error || 'Failed to delete user.', 'danger');
+}
+
+document.getElementById('addUserBtn').addEventListener('click', () => {
+  document.getElementById('newAdminUsername').value  = '';
+  document.getElementById('newAdminPassword').value  = '';
+  document.getElementById('newAdminPasswordConfirm').value = '';
+  document.getElementById('addUserError').classList.add('d-none');
+  new bootstrap.Modal(document.getElementById('addUserModal')).show();
+  setTimeout(() => document.getElementById('newAdminUsername').focus(), 300);
+});
+
+document.getElementById('saveNewUserBtn').addEventListener('click', async () => {
+  const username = document.getElementById('newAdminUsername').value.trim();
+  const password = document.getElementById('newAdminPassword').value;
+  const confirm  = document.getElementById('newAdminPasswordConfirm').value;
+  const errEl    = document.getElementById('addUserError');
+  errEl.classList.add('d-none');
+
+  if (!username || username.length < 3) { errEl.textContent = 'Username must be at least 3 characters.'; errEl.classList.remove('d-none'); return; }
+  if (!password || password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.remove('d-none'); return; }
+  if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('d-none'); return; }
+
+  const btn     = document.getElementById('saveNewUserBtn');
+  const spinner = document.getElementById('saveNewUserSpinner');
+  btn.disabled = true; spinner.classList.remove('d-none');
+
+  const res  = await api('/api/users', { method: 'POST', body: JSON.stringify({ username, password }) });
+  const data = await res.json();
+
+  if (res.ok) {
+    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+    toast(`User "${username}" created. They will set up their own 2FA on first login.`, 'success');
+    loadUsers();
+  } else {
+    errEl.textContent = data.error || 'Failed to create user.';
+    errEl.classList.remove('d-none');
+  }
+  btn.disabled = false; spinner.classList.add('d-none');
+});
+
 // ─── Two-Factor Authentication ───────────────────────────────────────────────
 function renderQR(containerId, uri) {
   const wrap = document.getElementById(containerId);
-  wrap.innerHTML = '<span class="text-muted small">Generating QR code…</span>';
   try {
-    QRCode.toDataURL(uri, { width: 220, margin: 2, errorCorrectionLevel: 'M' }, (err, url) => {
-      if (err || !url) {
-        wrap.innerHTML = '<p class="text-warning small mb-0">QR code could not render — use the manual code below instead.</p>';
-        return;
-      }
-      wrap.innerHTML = `<img src="${url}" width="220" height="220" style="border-radius:8px;display:block;margin:auto" alt="QR code">`;
-    });
-  } catch {
-    wrap.innerHTML = '<p class="text-warning small mb-0">QR code could not render — use the manual code below instead.</p>';
+    // qrcode-generator: pure SVG, no canvas needed
+    const qr = qrcode(9, 'M');
+    qr.addData(uri, 'Byte');
+    qr.make();
+    const svg = qr.createSvgTag(5, 5);
+    wrap.innerHTML = `<div style="display:inline-block;background:#fff;border-radius:8px;padding:8px;line-height:0">${svg}</div>`;
+  } catch (e) {
+    wrap.innerHTML = '<p class="text-warning small mb-0 text-center">Use the manual code below in your app.</p>';
   }
 }
 
@@ -899,7 +1031,7 @@ async function load2FAStatus() {
 
 document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
   if (link.dataset.tab === 'account') {
-    link.addEventListener('click', load2FAStatus);
+    link.addEventListener('click', () => { load2FAStatus(); loadUsers(); });
   }
 });
 

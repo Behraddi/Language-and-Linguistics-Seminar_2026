@@ -145,9 +145,9 @@
 
     function loadQRLib() {
       return new Promise(resolve => {
-        if (typeof QRCode !== 'undefined') { resolve(); return; }
+        if (typeof qrcode !== 'undefined') { resolve(); return; }
         const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';
+        s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
         s.onload = resolve;
         document.head.appendChild(s);
       });
@@ -283,14 +283,15 @@
         document.getElementById('setupSecretDisplay').textContent = data.secret;
         await loadQRLib();
         const wrap = document.getElementById('setupQRWrap');
-        wrap.innerHTML = '<span class="text-muted small">Generating QR code…</span>';
-        QRCode.toDataURL(data.uri, { width: 220, margin: 2, errorCorrectionLevel: 'M' }, (err, url) => {
-          if (err || !url) {
-            wrap.innerHTML = '<p class="text-warning small mb-0">QR code could not render — enter the code above manually in your app.</p>';
-            return;
-          }
-          wrap.innerHTML = `<img src="${url}" width="220" height="220" style="border-radius:8px;display:block;margin:auto" alt="QR code">`;
-        });
+        try {
+          const qr = qrcode(9, 'M');
+          qr.addData(data.uri, 'Byte');
+          qr.make();
+          const svg = qr.createSvgTag(5, 5);
+          wrap.innerHTML = `<div style="display:inline-block;background:#fff;border-radius:8px;padding:8px;line-height:0">${svg}</div>`;
+        } catch {
+          wrap.innerHTML = '<p class="text-warning small mb-0 text-center">Use the manual code above in your app.</p>';
+        }
       } catch { showError('Could not load QR code. Please refresh.'); }
     }
 
